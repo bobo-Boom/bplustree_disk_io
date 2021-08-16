@@ -9,7 +9,7 @@
 /*
 B+树设置结构体
 char filename[1024]----文件名字
-int block_size---------文件大小？ 应该是节点缓冲大小
+int block_size---------文件大小
 */
 struct bplus_tree_config {
     char filename[1024];
@@ -104,7 +104,7 @@ static int bplus_tree_setting(struct bplus_tree_config *config) {
                     again = 1;
                     /*最小容量包括：B+树节点，3个及以上键值和偏移量*/
                 } else {
-                    int order = (size - sizeof(struct bplus_node)) / (sizeof(key_t) + sizeof(off_t));
+                    int order = (size - sizeof(struct bplus_node)) / (sizeof(key_t_arr) + sizeof(off_t));
                     if (size < (int) sizeof(struct bplus_node) || order <= 2) {
                         fprintf(stderr, "block size is too small for one node!\n");
                         again = 1;
@@ -129,13 +129,13 @@ static int bplus_tree_setting(struct bplus_tree_config *config) {
 static void _proc(struct bplus_tree *tree, char op, int n) {
     switch (op) {
         case 'i':
-            bplus_tree_put(tree, n, n);
+           // bplus_tree_put(tree, n, n);
             break;
         case 'r':
-            bplus_tree_put(tree, n, 0);
+          //  bplus_tree_put(tree, n, 0);
             break;
         case 's':
-            printf("key:%d data_index:%ld\n", n, bplus_tree_get(tree, n));
+         //   printf("key:%d data_index:%ld\n", n, bplus_tree_get(tree, n));
             break;
         default:
             break;
@@ -278,74 +278,57 @@ static void command_process(struct bplus_tree *tree) {
     }
 }
 
-//int main(void) {
-//    /*声明B+树设置*/
-//    struct bplus_tree_config config;
-//    /*定义一个B+树信息结构体*/
-//    struct bplus_tree *tree = NULL;
-//    while (tree == NULL) {
-//        /*设置B+树*/
-//        if (bplus_tree_setting(&config) < 0) {
-//            return 0;
+//int main(void)
+//{
+//		/*声明B+树设置*/
+//        struct bplus_tree_config config;
+//		/*定义一个B+树信息结构体*/
+//        struct bplus_tree *tree = NULL;
+//        while (tree == NULL) {
+//				/*设置B+树*/
+//                if (bplus_tree_setting(&config) < 0) {
+//                        return 0;
+//                }
+//				/*
+//				初始化索引，将config的值赋值给tree
+//				首次运行创建.index文件
+//				再次运行会将.boot内保存的free_blocks赋值给tree
+//				*/
+//                tree = bplus_tree_init(config.filename, config.block_size);
 //        }
-//        /*
-//        初始化索引，将config的值赋值给tree
-//        首次运行创建.index文件
-//        再次运行会将.boot内保存的free_blocks赋值给tree
-//        */
-//        tree = bplus_tree_init(config.filename, config.block_size);
-//    }
-//    command_process(tree);
-//    bplus_tree_put(tree, 3000, 50000);
-//    bplus_tree_put(tree, 3001, 50001);
-//    bplus_tree_put(tree, 3002, 50002);
-//    bplus_tree_put(tree, 3003, 50001);
-//    bplus_tree_deinit(tree);
+//        command_process(tree);
+//        bplus_tree_deinit(tree);
 //
-//    return 0;
+//        return 0;
 //}
-
 int main(void) {
 
-    //B+树初始化。
+
+    struct bplus_tree_config config;
+    config.block_size=1024;
+    strcpy(config.filename, "./data.index");
+    /*定义一个B+树信息结构体*/
     struct bplus_tree *tree = NULL;
-    tree = bplus_tree_init("./data.index", 4096);
+    //初始化B+树
+    tree = bplus_tree_init(config.filename, config.block_size);
 
-    //插入数据
-    for (int i = 0; i < 10000; i++) {
-        bplus_tree_put(tree, i,  i);
+
+    for(int i=1;i<1000;i++){
+        key_t_arr key={0};
+        sprintf(key,"%d",i);
+        printf(" insert %d\n",i);
+        bplus_tree_put(tree,key,i);
+
     }
 
-//
-//    //获取数据
-//    long pageIndex = bplus_tree_get(tree, 3000);
-//    printf("pageIndex is :%ld\n", pageIndex);
-//
-//
-//    long *rets = bplus_tree_get_range(tree, 3000, 3009);
-//    for (int i = 0; i < 10; i++) {
-//        printf("range results : %ld\n", rets[i]);
-//    }
-//    free(rets);
-    int amount = 0;
-
-//     printf("大于3000\n");
-//     long * results=bplus_tree_get_more_than(tree, 9800,&amount);
-//     printf("amoount is %d\n",amount);
-//     for (int i = 0; i < amount; i++) {
-//        printf("data is %ld\n",results[i]);
-//     }
-//     free(results);
-
-    printf("小于3099");
-    long *results = bplus_tree_less_than(tree, 9000,&amount);
-    printf("amount  is  ================= %d\n",amount);
-    for (int i = 0; i < amount; i++) {
-        printf("data is %ld\n", results[i]);
+    for(int i=1;i<1000;i++){
+        key_t_arr key={0};
+        sprintf(key,"%d",i);
+        long data=bplus_tree_get(tree,key);
+        printf("data%d is %ld\n",i,data);
     }
-    free(results);
 
-    //关闭B+树
+
     bplus_tree_deinit(tree);
 
     return 0;

@@ -1,3 +1,13 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<assert.h>
+#include<string.h>
+#include<fcntl.h>
+#include<ctype.h>
+#include<unistd.h>
+#include<sys/types.h>
+#include<sys/stat.h>
+
 #include"bplustree.h"
 
 /*
@@ -39,7 +49,7 @@ enum {
 |非叶子节点	|  node | key 	| key 	| key 	| key 	|  ptr  |  ptr  |  ptr  |  ptr  |  ptr	|  ptr	|
 |			|		|		|		|		|		|		|		|		|		|		|		|
  ---------------------------------------------------------------------------------------------------
-key和data的个数由_max_entries决定：_max_entries = (_block_size - sizeof(node)) / (sizeof(key_t) + sizeof(long));
+key和data的个数由_max_entries决定：_max_entries = (_block_size - sizeof(node)) / (sizeof(key_t_arr) + sizeof(long));
 一个节点的大小由_block_size决定，容量要包含1个node结构体和3个及以上的key，data
 */
 
@@ -49,14 +59,14 @@ key和data的个数由_max_entries决定：_max_entries = (_block_size - sizeof(
 /*B+树节点node末尾的偏移地址，即key的首地址*/
 #define offset_ptr(node) ((char *) (node) + sizeof(*node))
 
-/*返回B+树节点末尾地址，强制转换为key_t*，即key的指针*/
-#define key(node) ((key_t *)offset_ptr(node))
+/*返回B+树节点末尾地址，强制转换为key_t_arr*，即key的指针*/
+#define key(node) ((key_t_arr *)offset_ptr(node))
 
 /*返回B+树节点和key末尾地址，强制转换为long*，即data指针*/
-#define data(node) ((long *)(offset_ptr(node) + _max_entries * sizeof(key_t)))
+#define data(node) ((long *)(offset_ptr(node) + _max_entries * sizeof(key_t_arr)))
 
 /*返回最后一个key的指针，用于非叶子节点的指向，即第一个ptr*/
-#define sub(node) ((off_t *)(offset_ptr(node) + (_max_order - 1) * sizeof(key_t)))
+#define sub(node) ((off_t *)(offset_ptr(node) + (_max_order - 1) * sizeof(key_t_arr)))
 
 /*
 全局静态变量
@@ -78,26 +88,37 @@ static inline int is_leaf(struct bplus_node *node) {
 /*
 键值二分查找
 */
-static int key_binary_search(struct bplus_node *node, key_t target) {
-    //Key的首地址
-    key_t *arr = key(node);
-    /*叶子节点：len；非叶子节点：len-1;非叶子节点的key少一个？，用于放ptr*/
-    /*len用于定位最后一个key的位置*/
+static int key_binary_search(struct bplus_node *node, key_t_arr target) {
+    key_t_arr *arr = key(node);
+    /*叶子节点：len；非叶子节点：len-1;非叶子节点的key少一个，用于放ptr*/
     int len = is_leaf(node) ? node->children : node->children - 1;
-
     int low = -1;
     int high = len;
+    //printf("key_binary_search len is %d\n",len);
+
+    int t=0;
+    int m=0;
 
     while (low + 1 < high) {
         int mid = low + (high - low) / 2;
-        if (target > arr[mid]) {
+        //todo
+        //if (target > arr[mid]) {
+
+//        sscanf(target,"%d",&t);
+//        sscanf( arr[mid],"%d",&m);
+//        if (t > m) {
+        if (strcmp(target, arr[mid]) > 0) {
             low = mid;
         } else {
             high = mid;
         }
     }
-
-    if (high >= len || arr[high] != target) {
+    //todo
+    //if (high >= len || arr[high] != target) {
+    if (high >= len || strcmp(target, arr[high]) != 0) {
+//    sscanf(target,"%d",&t);
+//    sscanf(  arr[high],"%d",&m);
+//    if (high >= len || t!=m) {
         return -high - 1;
     } else {
         return high;
@@ -107,7 +128,7 @@ static int key_binary_search(struct bplus_node *node, key_t target) {
 /*
 查找键值在父节点的第几位
 */
-static inline int parent_key_index(struct bplus_node *parent, key_t key) {
+static inline int parent_key_index(struct bplus_node *parent, key_t_arr key) {
     int index = key_binary_search(parent, key);
     return index >= 0 ? index : -index - 2;
 }
@@ -171,7 +192,6 @@ static inline struct bplus_node *leaf_new(struct bplus_tree *tree) {
 }
 
 /*
- * 将节点从文件中加载出来
 根据偏移量从.index获取节点的全部信息，加载到缓冲区
 偏移量非法则返回NULL
 */
@@ -220,6 +240,20 @@ node指向的节点信息和其后面跟随的节点内容
 static inline void node_flush(struct bplus_tree *tree, struct bplus_node *node) {
     if (node != NULL) {
         int len = pwrite(tree->fd, node, _block_size, node->self);
+//        if(is_leaf(node)){
+//            printf("\nnode_flush  key: ");
+//            for (int i = 0; i < node->children; ++i) {
+//                printf("%s ",key(node)[i]);
+//            }
+//            printf("\n");
+//
+//            printf("\nnode_flush  data: ");
+//            for (int i = 0; i < node->children; ++i) {
+//                printf("%ld ",data(node)[i]);
+//            }
+//            printf("\n");
+//        }
+
         assert(len == _block_size);
         cache_defer(tree, node);
     }
@@ -316,7 +350,7 @@ static inline void sub_node_flush(struct bplus_tree *tree, struct bplus_node *pa
 /*
 B+树查找
 */
-static long bplus_tree_search(struct bplus_tree *tree, key_t key) {
+static long bplus_tree_search(struct bplus_tree *tree, key_t_arr key) {
     int ret = -1;
     /*返回根节点的结构体*/
     struct bplus_node *node = node_seek(tree, tree->root);
@@ -348,9 +382,8 @@ struct bplus_node *node------------B+树要分裂的节点
 struct bplus_node *left------------B+树左边的新节点
 */
 static void left_node_add(struct bplus_tree *tree, struct bplus_node *node, struct bplus_node *left) {
-    //新节点的off_t文件偏移量
     new_node_append(tree, left);
-    //将前一个节点从文件中加载出来
+
     struct bplus_node *prev = node_fetch(tree, node->prev);
     if (prev != NULL) {
         prev->next = left->self;
@@ -386,23 +419,26 @@ static void right_node_add(struct bplus_tree *tree, struct bplus_node *node, str
 }
 
 /*非叶子节点插入，声明*/
-static key_t
+static int
 non_leaf_insert(struct bplus_tree *tree, struct bplus_node *node, struct bplus_node *l_ch, struct bplus_node *r_ch,
-                key_t key);
+                key_t_arr key);
 
 /*
 下一层节点满后分裂，建立新的父节点，添加键值
 struct bplus_tree *tree-------------B+树信息结构体
 struct bplus_node *l_ch-------------B+树左孩子节点
 struct bplus_node *r_ch-------------B+树右孩子节点
-key_t key---------------------------后继节点的键值
+key_t_arr key---------------------------后继节点的键值
 */
-static int parent_node_build(struct bplus_tree *tree, struct bplus_node *l_ch, struct bplus_node *r_ch, key_t key) {
+static int parent_node_build(struct bplus_tree *tree, struct bplus_node *l_ch, struct bplus_node *r_ch, key_t_arr key) {
     /*左右节点均没有父节点*/
     if (l_ch->parent == INVALID_OFFSET && r_ch->parent == INVALID_OFFSET) {
+        printf("===================parent_node_build 均没有父亲\n");
         /*左右节点均没有父节点，建立新的父节点*/
         struct bplus_node *parent = non_leaf_new(tree);
-        key(parent)[0] = key;
+        //todo
+        //key(parent)[0] = key;
+        memcpy(key(parent)[0], key, sizeof(key_t_arr));
         sub(parent)[0] = l_ch->self;
         sub(parent)[1] = r_ch->self;
         parent->children = 2;
@@ -417,13 +453,19 @@ static int parent_node_build(struct bplus_tree *tree, struct bplus_node *l_ch, s
         node_flush(tree, l_ch);
         node_flush(tree, r_ch);
         node_flush(tree, parent);
+
         return 0;
         /*右节点没有父节点*/
     } else if (r_ch->parent == INVALID_OFFSET) {
+        printf("===================parent_node_build 右节点没有父亲\n");
+
         /*node_fetch(tree, l_ch->parent):从.index文件获取*/
         return non_leaf_insert(tree, node_fetch(tree, l_ch->parent), l_ch, r_ch, key);
         /*左节点没有父节点*/
     } else {
+
+        printf("===================parent_node_build 左节点没有父亲\n");
+
         /*node_fetch(tree, r_ch->parent):从.index文件获取*/
         return non_leaf_insert(tree, node_fetch(tree, r_ch->parent), l_ch, r_ch, key);
     }
@@ -437,14 +479,16 @@ struct bplus_node *node------------------原节点
 struct bplus_node *left------------------新分裂的节点
 struct bplus_node *l_ch------------------左孩子
 struct bplus_node *r_ch------------------右孩子
-key_t key--------------------------------键值
+key_t_arr key--------------------------------键值
 int insert-------------------------------插入位置
 */
-static key_t
+//todo
+static char *
 non_leaf_split_left(struct bplus_tree *tree, struct bplus_node *node, struct bplus_node *left, struct bplus_node *l_ch,
-                    struct bplus_node *r_ch, key_t key, int insert) {
+                    struct bplus_node *r_ch, key_t_arr key, int insert) {
     int i;
-    key_t split_key;
+    //todo
+    static key_t_arr split_key = {0};
 
     /*分裂边界spilit=(len+1)/2*/
     int split = (_max_order + 1) / 2;
@@ -458,11 +502,11 @@ non_leaf_split_left(struct bplus_tree *tree, struct bplus_node *node, struct bpl
     node->children = _max_order - split + 1;
 
     /*将原来的insert~spilit的key和data复制到分裂的左兄弟*/
-    memmove(&key(left)[0], &key(node)[0], pivot * sizeof(key_t));
-    memmove(&sub(left)[0], &sub(node)[0], pivot * sizeof(off_t));
+     memmove(key(left)[0], key(node)[0], pivot * sizeof(key_t_arr));
+     memmove(&sub(left)[0], &sub(node)[0], pivot * sizeof(off_t));
 
     /*将原来的insert+1~end的key和data后移1位，方便插入*/
-    memmove(&key(left)[pivot + 1], &key(node)[pivot], (split - pivot - 1) * sizeof(key_t));
+     memmove(key(left)[pivot + 1], key(node)[pivot], (split - pivot - 1) * sizeof(key_t_arr));
     memmove(&sub(left)[pivot + 1], &sub(node)[pivot], (split - pivot - 1) * sizeof(off_t));
 
     /*将分裂的左节点的孩子重定向，写入.index*/
@@ -473,7 +517,9 @@ non_leaf_split_left(struct bplus_tree *tree, struct bplus_node *node, struct bpl
     }
 
     /*插入新键和子节点，并找到拆分键*/
-    key(left)[pivot] = key;
+    //key(left)[pivot] = key;
+    //todo
+    memcpy(key(left)[pivot], key, sizeof(key_t_arr));
     /*
     插入的非叶子节点有左右两孩子
     判断他们在分裂边界的那一边
@@ -488,7 +534,9 @@ non_leaf_split_left(struct bplus_tree *tree, struct bplus_node *node, struct bpl
         */
         sub_node_update(tree, left, pivot, l_ch);
         sub_node_update(tree, node, 0, r_ch);
-        split_key = key;
+        //todo
+        //split_key = key;
+        memcpy(split_key, key, sizeof(key_t_arr));
     } else {
         /*
         两个新的子节点在分裂左节点
@@ -497,15 +545,18 @@ non_leaf_split_left(struct bplus_tree *tree, struct bplus_node *node, struct bpl
         sub_node_update(tree, left, pivot, l_ch);
         sub_node_update(tree, left, pivot + 1, r_ch);
         sub(node)[0] = sub(node)[split - 1];
-        split_key = key(node)[split - 2];
+        //todo
+        //split_key = key(node)[split - 2];
+        memcpy(split_key, key(node)[split - 2], sizeof(key_t_arr));
+
     }
 
     /*将原节点分裂边界右边的key和ptr左移*/
-    memmove(&key(node)[0], &key(node)[split - 1], (node->children - 1) * sizeof(key_t));
+    memmove(key(node)[0], key(node)[split - 1], (node->children - 1) * sizeof(key_t_arr));
     memmove(&sub(node)[1], &sub(node)[split], (node->children - 1) * sizeof(off_t));
-
+    //todo
     /*返回前继节点，作为上一层键值*/
-    return split_key;
+    return (char *) split_key;
 }
 
 /*
@@ -517,11 +568,12 @@ struct bplus_node *node------------------原节点
 struct bplus_node *right-----------------新分裂的节点
 struct bplus_node *l_ch------------------左孩子
 struct bplus_node *r_ch------------------右孩子
-key_t key--------------------------------键值
+key_t_arr key--------------------------------键值
 int insert-------------------------------插入位置
 */
-static key_t non_leaf_split_right1(struct bplus_tree *tree, struct bplus_node *node, struct bplus_node *right,
-                                   struct bplus_node *l_ch, struct bplus_node *r_ch, key_t key, int insert) {
+//todo
+static char *non_leaf_split_right1(struct bplus_tree *tree, struct bplus_node *node, struct bplus_node *right,
+                                   struct bplus_node *l_ch, struct bplus_node *r_ch, key_t_arr key, int insert) {
     int i;
 
     /*分裂边界spilit=(len+1)/2*/
@@ -531,7 +583,10 @@ static key_t non_leaf_split_right1(struct bplus_tree *tree, struct bplus_node *n
     right_node_add(tree, node, right);
 
     /*上一层的键值*/
-    key_t split_key = key(node)[split - 1];
+    //todo
+    //key_t_arr split_key = key(node)[split - 1];
+    static key_t_arr split_key = {0};
+    memcpy(split_key, key(node)[split - 1], sizeof(key_t_arr));
 
     /*重新计算孩子个数*/
     int pivot = 0;
@@ -539,12 +594,13 @@ static key_t non_leaf_split_right1(struct bplus_tree *tree, struct bplus_node *n
     right->children = _max_order - split + 1;
 
     /*插入key和ptr*/
-    key(right)[0] = key;
+    // key(right)[0] = key;
+    memcpy(key(right)[0], key, sizeof(key_t_arr));
     sub_node_update(tree, right, pivot, l_ch);
     sub_node_update(tree, right, pivot + 1, r_ch);
 
     /*复制数据到新的分裂节点*/
-    memmove(&key(right)[pivot + 1], &key(node)[split], (right->children - 2) * sizeof(key_t));
+    memmove(key(right)[pivot + 1], key(node)[split], (right->children - 2) * sizeof(key_t_arr));
     memmove(&sub(right)[pivot + 2], &sub(node)[split + 1], (right->children - 2) * sizeof(off_t));
 
     /*重定向父子结点，写入.index*/
@@ -553,7 +609,7 @@ static key_t non_leaf_split_right1(struct bplus_tree *tree, struct bplus_node *n
     }
 
     /*返回上一层键值*/
-    return split_key;
+    return (char *) split_key;
 }
 
 /*
@@ -564,11 +620,12 @@ struct bplus_node *node------------------原节点
 struct bplus_node *right-----------------新分裂的节点
 struct bplus_node *l_ch------------------左孩子
 struct bplus_node *r_ch------------------右孩子
-key_t key--------------------------------键值
+key_t_arr key--------------------------------键值
 int insert-------------------------------插入位置
 */
-static key_t non_leaf_split_right2(struct bplus_tree *tree, struct bplus_node *node, struct bplus_node *right,
-                                   struct bplus_node *l_ch, struct bplus_node *r_ch, key_t key, int insert) {
+//todo
+static char *non_leaf_split_right2(struct bplus_tree *tree, struct bplus_node *node, struct bplus_node *right,
+                                   struct bplus_node *l_ch, struct bplus_node *r_ch, key_t_arr key, int insert) {
     int i;
 
     /*分裂边界spilit=(len+1)/2*/
@@ -576,9 +633,11 @@ static key_t non_leaf_split_right2(struct bplus_tree *tree, struct bplus_node *n
 
     /*右节点添加到树*/
     right_node_add(tree, node, right);
-
+    //todo
     /*上一层的键值*/
-    key_t split_key = key(node)[split];
+    //key_t_arr split_key = key(node)[split];
+    static key_t_arr split_key = {0};
+    memcpy(split_key, key(node)[split], sizeof(key_t_arr));
 
     /*重新计算孩子个数*/
     int pivot = insert - split - 1;
@@ -586,16 +645,19 @@ static key_t non_leaf_split_right2(struct bplus_tree *tree, struct bplus_node *n
     right->children = _max_order - split;
 
     /*复制数据到新的分裂节点*/
-    memmove(&key(right)[0], &key(node)[split + 1], pivot * sizeof(key_t));
+     memmove(key(right)[0], key(node)[split + 1], pivot * sizeof(key_t_arr));
     memmove(&sub(right)[0], &sub(node)[split + 1], pivot * sizeof(off_t));
 
     /*插入key和ptr，更新索引*/
-    key(right)[pivot] = key;
+//    key(right)[pivot] = key;
+    //todo
+    memcpy(key(right)[pivot], key, sizeof(key_t_arr));
+
     sub_node_update(tree, right, pivot, l_ch);
     sub_node_update(tree, right, pivot + 1, r_ch);
 
     /*将原节点insert+1~end的数据移动到新分裂的非叶子节点*/
-    memmove(&key(right)[pivot + 1], &key(node)[insert], (_max_order - insert - 1) * sizeof(key_t));
+     memmove(key(right)[pivot + 1], key(node)[insert], (_max_order - insert - 1) * sizeof(key_t_arr));
     memmove(&sub(right)[pivot + 2], &sub(node)[insert + 1], (_max_order - insert - 1) * sizeof(off_t));
 
     /*重定向父子结点，写入.index*/
@@ -606,7 +668,8 @@ static key_t non_leaf_split_right2(struct bplus_tree *tree, struct bplus_node *n
     }
 
     /*返回上一层键值*/
-    return split_key;
+    //todo
+    return (char *) split_key;
 }
 
 /*
@@ -615,17 +678,19 @@ struct bplus_tree *tree----------------B+树信息结构体
 struct bplus_node *node----------------父节点
 struct bplus_node *l_ch----------------左孩子
 struct bplus_node *r_ch----------------右孩子
-key_t key------------------------------键值
+key_t_arr key------------------------------键值
 int insert-----------------------------插入位置
 */
 static void non_leaf_simple_insert(struct bplus_tree *tree, struct bplus_node *node, struct bplus_node *l_ch,
-                                   struct bplus_node *r_ch, key_t key, int insert) {
+                                   struct bplus_node *r_ch, key_t_arr key, int insert) {
     /*将insert处原来的值后移*/
-    memmove(&key(node)[insert + 1], &key(node)[insert], (node->children - 1 - insert) * sizeof(key_t));
+    memmove(key(node)[insert + 1], key(node)[insert], (node->children - 1 - insert) * sizeof(key_t_arr));
     memmove(&sub(node)[insert + 2], &sub(node)[insert + 1], (node->children - 1 - insert) * sizeof(off_t));
 
     /*在insert处插入键值，并更新索引*/
-    key(node)[insert] = key;
+    //key(node)[insert] = key;
+    //todo
+    memcpy(key(node)[insert], key, sizeof(key_t_arr));
     sub_node_update(tree, node, insert, l_ch);
     sub_node_update(tree, node, insert + 1, r_ch);
     node->children++;
@@ -635,22 +700,25 @@ static void non_leaf_simple_insert(struct bplus_tree *tree, struct bplus_node *n
 非叶子节点插入，定义
 即生成新的父节点
 struct bplus_tree *tree-------------B+树信息结构体
-struct bplus_node *node-------------要接入的新的B+树兄弟叶子节点//左节点的父亲节点
+struct bplus_node *node-------------要接入的新的B+树兄弟叶子节点
 struct bplus_node *l_ch-------------B+树左孩子节点
 struct bplus_node *r_ch-------------B+树右孩子节点
-key_t key
+key_t_arr key
 */
 static int
 non_leaf_insert(struct bplus_tree *tree, struct bplus_node *node, struct bplus_node *l_ch, struct bplus_node *r_ch,
-                key_t key) {
+                key_t_arr key) {
     /*键值二分查找*/
+
     int insert = key_binary_search(node, key);
     assert(insert < 0);
     insert = -insert - 1;
 
     /*父节点满，进行分裂*/
     if (node->children == _max_order) {
-        key_t split_key;
+        //todo
+        //key_t_arr split_key;
+        char *split_key=NULL;
         /*分裂边界spilit=(len+1)/2*/
         int split = (node->children + 1) / 2;
         /*生成一个新的分裂的非叶子节点*/
@@ -663,11 +731,17 @@ non_leaf_insert(struct bplus_tree *tree, struct bplus_node *node, struct bplus_n
             split_key = non_leaf_split_right2(tree, node, sibling, l_ch, r_ch, key, insert);
         }
 
+        //todo
+        key_t_arr  k1={0};
         /*再次建立新的父节点*/
         if (insert < split) {
-            return parent_node_build(tree, sibling, node, split_key);
+            memcpy(k1,split_key,sizeof(key_t_arr));
+           // return parent_node_build(tree, sibling, node, split_key);
+            return parent_node_build(tree, sibling, node, k1);
         } else {
-            return parent_node_build(tree, node, sibling, split_key);
+            memcpy(k1,split_key,sizeof(key_t_arr));
+            //return parent_node_build(tree, node, sibling, split_key);
+            return parent_node_build(tree, node, sibling, k1);
         }
         /*父节点未满，进行简单的非叶子节点插入，并保存*/
     } else {
@@ -683,12 +757,13 @@ non_leaf_insert(struct bplus_tree *tree, struct bplus_node *node, struct bplus_n
 struct bplus_tree *tree-----------B+树信息结构体
 struct bplus_node *leaf-----------B+树叶子节点
 struct bplus_node *left-----------新的叶子节点
-key_t key-------------------------键值
+key_t_arr key-------------------------键值
 long data-------------------------数据
 int insert------------------------插入位置
 */
-static key_t
-leaf_split_left(struct bplus_tree *tree, struct bplus_node *leaf, struct bplus_node *left, key_t key, long data,
+//todo
+static char *
+leaf_split_left(struct bplus_tree *tree, struct bplus_node *leaf, struct bplus_node *left, key_t_arr key, long data,
                 int insert) {
     /*分裂边界split=(len+1)/2*/
     int split = (leaf->children + 1) / 2;
@@ -705,23 +780,29 @@ leaf_split_left(struct bplus_tree *tree, struct bplus_node *leaf, struct bplus_n
     将原叶子节点key[0]-key[insert]的数值复制到左边分裂出的新的叶子节点
     将原叶子节点data[0]-data[insert]的数值复制到左边分裂出的新的叶子节点
     */
-    memmove(&key(left)[0], &key(leaf)[0], pivot * sizeof(key_t));
+     memmove(key(left)[0], key(leaf)[0], pivot * sizeof(key_t_arr));
     memmove(&data(left)[0], &data(leaf)[0], pivot * sizeof(long));
 
     /*在insert处插入新的key和data*/
-    key(left)[pivot] = key;
+    //todo
+    //key(left)[pivot] = key;
+    memcpy(key(left)[pivot], key, sizeof(key_t_arr));
     data(left)[pivot] = data;
 
     /*从原叶子节点将insert到split的值放到新的叶子节点insert+1处*/
-    memmove(&key(left)[pivot + 1], &key(leaf)[pivot], (split - pivot - 1) * sizeof(key_t));
+     memmove(key(left)[pivot + 1], key(leaf)[pivot], (split - pivot - 1) * sizeof(key_t_arr));
     memmove(&data(left)[pivot + 1], &data(leaf)[pivot], (split - pivot - 1) * sizeof(long));
 
     /*将原叶子节点insert+1~end的key和data复制到原叶子节点key[0]*/
-    memmove(&key(leaf)[0], &key(leaf)[split - 1], leaf->children * sizeof(key_t));
+     memmove(key(leaf)[0], key(leaf)[split - 1], leaf->children * sizeof(key_t_arr));
     memmove(&data(leaf)[0], &data(leaf)[split - 1], leaf->children * sizeof(long));
 
     /*返回后继节点的key，即原叶子节点现在的key[0]*/
-    return key(leaf)[0];
+
+    //此处其实是返回key的值即可，目前是返回的节点内存地址，有存在被修改的风险。
+    static key_t_arr ret = {0};
+    memcpy(ret, key(leaf)[0], sizeof(key_t_arr));
+    return (char *) ret;
 }
 
 /*
@@ -730,12 +811,13 @@ leaf_split_left(struct bplus_tree *tree, struct bplus_node *leaf, struct bplus_n
 struct bplus_tree *tree-----------B+树信息结构体
 struct bplus_node *leaf-----------B+树叶子节点
 struct bplus_node *right----------新的叶子节点
-key_t key-------------------------键值
+key_t_arr key-------------------------键值
 long data-------------------------数据
 int insert------------------------插入位置
 */
-static key_t
-leaf_split_right(struct bplus_tree *tree, struct bplus_node *leaf, struct bplus_node *right, key_t key, long data,
+//todo
+static char *
+leaf_split_right(struct bplus_tree *tree, struct bplus_node *leaf, struct bplus_node *right, key_t_arr key, long data,
                  int insert) {
     /*分裂边界split=(len+1)/2*/
     int split = (leaf->children + 1) / 2;
@@ -749,34 +831,41 @@ leaf_split_right(struct bplus_tree *tree, struct bplus_node *leaf, struct bplus_
     right->children = _max_entries - split + 1;
 
     /*将原叶子节点spilt~insert的key和data复制到右边分裂出的新的叶子节点*/
-    memmove(&key(right)[0], &key(leaf)[split], pivot * sizeof(key_t));
+     memmove(key(right)[0], key(leaf)[split], pivot * sizeof(key_t_arr));
     memmove(&data(right)[0], &data(leaf)[split], pivot * sizeof(long));
 
     /*在insert处插入新的key和data*/
-    key(right)[pivot] = key;
+    //key(right)[pivot] = key;
+    //todo
+    memcpy(key(right)[pivot], key, sizeof(key_t_arr));
     data(right)[pivot] = data;
 
     /*移动剩余的数据*/
-    memmove(&key(right)[pivot + 1], &key(leaf)[insert], (_max_entries - insert) * sizeof(key_t));
+     memmove(key(right)[pivot + 1], key(leaf)[insert], (_max_entries - insert) * sizeof(key_t_arr));
     memmove(&data(right)[pivot + 1], &data(leaf)[insert], (_max_entries - insert) * sizeof(long));
 
     /*返回后继节点的key，即分裂的叶子节点的key[0]*/
-    return key(right)[0];
+    //此处其实是返回key的值即可，目前是返回的节点内存地址，有存在被修改的风险。
+    static key_t_arr ret = {0};
+    memcpy(ret, key(right)[0], sizeof(key_t_arr));
+    return (char *) ret;
 }
 
 /*
 叶子节点在未满时的简单插入
 struct bplus_tree *tree--------------------B+树信息结构体
 struct bplus_node *leaf--------------------B+树节点结构体，要插入的位置的上一个节点
-key_t key----------------------------------键值
+key_t_arr key----------------------------------键值
 long data----------------------------------数据
 int intsert--------------------------------要插入的节点位序
 两个memmove是将在insert之前的数据往后存放，使得数据能够插入
 */
-static void leaf_simple_insert(struct bplus_tree *tree, struct bplus_node *leaf, key_t key, long data, int insert) {
-    memmove(&key(leaf)[insert + 1], &key(leaf)[insert], (leaf->children - insert) * sizeof(key_t));
+static void leaf_simple_insert(struct bplus_tree *tree, struct bplus_node *leaf, key_t_arr key, long data, int insert) {
+     memmove(key(leaf)[insert + 1], key(leaf)[insert], (leaf->children - insert) * sizeof(key_t_arr));
     memmove(&data(leaf)[insert + 1], &data(leaf)[insert], (leaf->children - insert) * sizeof(long));
-    key(leaf)[insert] = key;
+    //key(leaf)[insert] = key;
+    //todo
+    memcpy(key(leaf)[insert], key, sizeof(key_t_arr));
     data(leaf)[insert] = data;
     leaf->children++;
 }
@@ -785,12 +874,11 @@ static void leaf_simple_insert(struct bplus_tree *tree, struct bplus_node *leaf,
 插入叶子节点
 struct bplus_tree *tree--------------------B+树信息结构体
 struct bplus_node *leaf--------------------B+树节点结构体，要插入的位置的上一个节点
-key_t key----------------------------------键值
+key_t_arr key----------------------------------键值
 long data----------------------------------数据
 */
-static int leaf_insert(struct bplus_tree *tree, struct bplus_node *leaf, key_t key, long data) {
+static int leaf_insert(struct bplus_tree *tree, struct bplus_node *leaf, key_t_arr key, long data) {
     /*键值二分查找*/
-    //insert值相当于这个key对应在node中的第几个key上
     int insert = key_binary_search(leaf, key);
     /*已存在键值*/
     if (insert >= 0) {
@@ -804,8 +892,9 @@ static int leaf_insert(struct bplus_tree *tree, struct bplus_node *leaf, key_t k
 
     /*叶子节点满*/
     if (leaf->children == _max_entries) {
-        key_t split_key;
-
+        //key_t_arr split_key;
+        //todo
+        char *split_key = NULL;
         /*节点分裂边界split=(len+1)/2*/
         int split = (_max_entries + 1) / 2;
         struct bplus_node *sibling = leaf_new(tree);
@@ -840,11 +929,10 @@ static int leaf_insert(struct bplus_tree *tree, struct bplus_node *leaf, key_t k
 /*
 插入节点
 */
-static int bplus_tree_insert(struct bplus_tree *tree, key_t key, long data) {
-    //通过节点的偏移量从.index文件将对应的节点数据加载出来。
+static int bplus_tree_insert(struct bplus_tree *tree, key_t_arr key, long data) {
     struct bplus_node *node = node_seek(tree, tree->root);
     while (node != NULL) {
-        /*到达叶子节点,一开始默认为叶子节点*/
+        /*到达叶子节点*/
         if (is_leaf(node)) {
             return leaf_insert(tree, node, key, data);
             /*还未到达叶子节点，继续循环递归查找*/
@@ -868,7 +956,9 @@ static int bplus_tree_insert(struct bplus_tree *tree, key_t key, long data) {
     刷新缓冲区：node_flush(tree, root);
     */
     struct bplus_node *root = leaf_new(tree);
-    key(root)[0] = key;
+//    key(root)[0] = key;
+    //todo
+    memcpy(key(root)[0], key, sizeof(key_t_arr));
     data(root)[0] = data;
     root->children = 1;
     tree->root = new_node_append(tree, root);
@@ -901,11 +991,15 @@ static inline int sibling_select(struct bplus_node *l_sib, struct bplus_node *r_
 */
 static void non_leaf_shift_from_left(struct bplus_tree *tree, struct bplus_node *node, struct bplus_node *left,
                                      struct bplus_node *parent, int parent_key_index, int remove) {
-    memmove(&key(node)[1], &key(node)[0], remove * sizeof(key_t));
+    memmove(key(node)[1], key(node)[0], remove * sizeof(key_t_arr));
     memmove(&sub(node)[1], &sub(node)[0], (remove + 1) * sizeof(off_t));
 
-    key(node)[0] = key(parent)[parent_key_index];
-    key(parent)[parent_key_index] = key(left)[left->children - 2];
+    //key(node)[0] = key(parent)[parent_key_index];
+    //todo
+    memcpy(key(node)[0], key(parent)[parent_key_index], sizeof(key_t_arr));
+    //key(parent)[parent_key_index] = key(left)[left->children - 2];
+    //todo
+    memcpy(key(parent)[parent_key_index], key(left)[left->children - 2], sizeof(key_t_arr));
 
     sub(node)[0] = sub(left)[left->children - 1];
     sub_node_flush(tree, node, sub(node)[0]);
@@ -919,12 +1013,15 @@ static void non_leaf_shift_from_left(struct bplus_tree *tree, struct bplus_node 
 static void non_leaf_merge_into_left(struct bplus_tree *tree, struct bplus_node *node, struct bplus_node *left,
                                      struct bplus_node *parent, int parent_key_index, int remove) {
     /*键值下移*/
-    key(left)[left->children - 1] = key(parent)[parent_key_index];
+    //key(left)[left->children - 1] = key(parent)[parent_key_index];
+    //todo
+    memcpy(key(left)[left->children - 1], key(parent)[parent_key_index], sizeof(key_t_arr));
 
-    memmove(&key(left)[left->children], &key(node)[0], remove * sizeof(key_t));
+     memmove(key(left)[left->children], key(node)[0], remove * sizeof(key_t_arr));
     memmove(&sub(left)[left->children], &sub(node)[0], (remove + 1) * sizeof(off_t));
 
-    memmove(&key(left)[left->children + remove], &key(node)[remove + 1], (node->children - remove - 2) * sizeof(key_t));
+     memmove(key(left)[left->children + remove], key(node)[remove + 1],
+            (node->children - remove - 2) * sizeof(key_t_arr));
     memmove(&sub(left)[left->children + remove + 1], &sub(node)[remove + 2],
             (node->children - remove - 2) * sizeof(off_t));
 
@@ -941,14 +1038,18 @@ static void non_leaf_merge_into_left(struct bplus_tree *tree, struct bplus_node 
 */
 static void non_leaf_shift_from_right(struct bplus_tree *tree, struct bplus_node *node, struct bplus_node *right,
                                       struct bplus_node *parent, int parent_key_index) {
-    key(node)[node->children - 1] = key(parent)[parent_key_index];
-    key(parent)[parent_key_index] = key(right)[0];
+    //key(node)[node->children - 1] = key(parent)[parent_key_index];
+    //todo
+    memcpy(key(node)[node->children - 1], key(parent)[parent_key_index], sizeof(key_t_arr));
+    //key(parent)[parent_key_index] = key(right)[0];
+    //todo
+    memcpy(key(parent)[parent_key_index], key(right)[0], sizeof(key_t_arr));
 
     sub(node)[node->children] = sub(right)[0];
     sub_node_flush(tree, node, sub(node)[node->children]);
     node->children++;
 
-    memmove(&key(right)[0], &key(right)[1], (right->children - 2) * sizeof(key_t));
+     memmove(key(right)[0], key(right)[1], (right->children - 2) * sizeof(key_t_arr));
     memmove(&sub(right)[0], &sub(right)[1], (right->children - 1) * sizeof(off_t));
 
     right->children--;
@@ -959,10 +1060,12 @@ static void non_leaf_shift_from_right(struct bplus_tree *tree, struct bplus_node
 */
 static void non_leaf_merge_from_right(struct bplus_tree *tree, struct bplus_node *node, struct bplus_node *right,
                                       struct bplus_node *parent, int parent_key_index) {
-    key(node)[node->children - 1] = key(parent)[parent_key_index];
+    //key(node)[node->children - 1] = key(parent)[parent_key_index];
+    //todo
+    memcpy(key(node)[node->children - 1], key(parent)[parent_key_index], sizeof(key_t_arr));
     node->children++;
 
-    memmove(&key(node)[node->children - 1], &key(right)[0], (right->children - 1) * sizeof(key_t));
+    memmove(key(node)[node->children - 1], key(right)[0], (right->children - 1) * sizeof(key_t_arr));
     memmove(&sub(node)[node->children - 1], &sub(right)[0], right->children * sizeof(off_t));
 
     int i, j;
@@ -978,7 +1081,7 @@ static void non_leaf_merge_from_right(struct bplus_tree *tree, struct bplus_node
 */
 static inline void non_leaf_simple_remove(struct bplus_tree *tree, struct bplus_node *node, int remove) {
     assert(node->children >= 2);
-    memmove(&key(node)[remove], &key(node)[remove + 1], (node->children - remove - 2) * sizeof(key_t));
+    memmove(key(node)[remove], key(node)[remove + 1], (node->children - remove - 2) * sizeof(key_t_arr));
     memmove(&sub(node)[remove + 1], &sub(node)[remove + 2], (node->children - remove - 2) * sizeof(off_t));
     node->children--;
 }
@@ -1071,16 +1174,20 @@ int remove-------------------------------删除的数据在leaf的位置
 static void leaf_shift_from_left(struct bplus_tree *tree, struct bplus_node *leaf, struct bplus_node *left,
                                  struct bplus_node *parent, int parent_key_index, int remove) {
     /*腾出第一个位置*/
-    memmove(&key(leaf)[1], &key(leaf)[0], remove * sizeof(key_t));
+     memmove(key(leaf)[1], key(leaf)[0], remove * sizeof(key_t_arr));
     memmove(&data(leaf)[1], &data(leaf)[0], remove * sizeof(off_t));
 
     /*从左兄弟拿一个数据*/
-    key(leaf)[0] = key(left)[left->children - 1];
+    //key(leaf)[0] = key(left)[left->children - 1];
+    //todo
+    memcpy(key(leaf)[0], key(left)[left->children - 1], sizeof(key_t_arr));
     data(leaf)[0] = data(left)[left->children - 1];
     left->children--;
 
     /*更新父节点的键值*/
-    key(parent)[parent_key_index] = key(leaf)[0];
+    //key(parent)[parent_key_index] = key(leaf)[0];
+    //todo
+    memcpy(key(parent)[parent_key_index], key(leaf)[0], sizeof(key_t_arr));
 }
 
 /*
@@ -1090,9 +1197,10 @@ static void
 leaf_merge_into_left(struct bplus_tree *tree, struct bplus_node *leaf, struct bplus_node *left, int parent_key_index,
                      int remove) {
     /*将key和data从leaf复制到left，不包括被删除的数据*/
-    memmove(&key(left)[left->children], &key(leaf)[0], remove * sizeof(key_t));
+     memmove(key(left)[left->children], key(leaf)[0], remove * sizeof(key_t_arr));
     memmove(&data(left)[left->children], &data(leaf)[0], remove * sizeof(off_t));
-    memmove(&key(left)[left->children + remove], &key(leaf)[remove + 1], (leaf->children - remove - 1) * sizeof(key_t));
+     memmove(key(left)[left->children + remove], key(leaf)[remove + 1],
+            (leaf->children - remove - 1) * sizeof(key_t_arr));
     memmove(&data(left)[left->children + remove], &data(leaf)[remove + 1],
             (leaf->children - remove - 1) * sizeof(off_t));
     left->children += leaf->children - 1;
@@ -1110,24 +1218,28 @@ int remove-------------------------------删除的数据在leaf的位置
 static void leaf_shift_from_right(struct bplus_tree *tree, struct bplus_node *leaf, struct bplus_node *right,
                                   struct bplus_node *parent, int parent_key_index) {
     /*leaf最后一个位置放right第一个数据*/
-    key(leaf)[leaf->children] = key(right)[0];
+    //key(leaf)[leaf->children] = key(right)[0];
+    //todo
+    memcpy(key(leaf)[leaf->children], key(right)[0], sizeof(key_t_arr));
     data(leaf)[leaf->children] = data(right)[0];
     leaf->children++;
 
     /*right左移*/
-    memmove(&key(right)[0], &key(right)[1], (right->children - 1) * sizeof(key_t));
+     memmove(key(right)[0], key(right)[1], (right->children - 1) * sizeof(key_t_arr));
     memmove(&data(right)[0], &data(right)[1], (right->children - 1) * sizeof(off_t));
     right->children--;
 
     /*更新父节点的键值*/
-    key(parent)[parent_key_index] = key(right)[0];
+    //key(parent)[parent_key_index] = key(right)[0];
+    //todo
+    memcpy(key(parent)[parent_key_index], key(right)[0], sizeof(key_t_arr));
 }
 
 /*
 左兄弟数据未过半，两两合并
 */
 static inline void leaf_merge_from_right(struct bplus_tree *tree, struct bplus_node *leaf, struct bplus_node *right) {
-    memmove(&key(leaf)[leaf->children], &key(right)[0], right->children * sizeof(key_t));
+     memmove(key(leaf)[leaf->children], key(right)[0], right->children * sizeof(key_t_arr));
     memmove(&data(leaf)[leaf->children], &data(right)[0], right->children * sizeof(off_t));
     leaf->children += right->children;
 }
@@ -1137,7 +1249,7 @@ static inline void leaf_merge_from_right(struct bplus_tree *tree, struct bplus_n
 */
 static inline void leaf_simple_remove(struct bplus_tree *tree, struct bplus_node *leaf, int remove) {
     /*key和data左移覆盖被删除的key和data*/
-    memmove(&key(leaf)[remove], &key(leaf)[remove + 1], (leaf->children - remove - 1) * sizeof(key_t));
+     memmove(key(leaf)[remove], key(leaf)[remove + 1], (leaf->children - remove - 1) * sizeof(key_t_arr));
     memmove(&data(leaf)[remove], &data(leaf)[remove + 1], (leaf->children - remove - 1) * sizeof(off_t));
     leaf->children--;
 }
@@ -1146,9 +1258,9 @@ static inline void leaf_simple_remove(struct bplus_tree *tree, struct bplus_node
 叶子节点的删除操作
 struct bplus_tree *tree-----------------B+树信息结构体
 struct bplus_node *leaf-----------------要执行删除操作的叶子节点
-key_t key-------------------------------要删除的键值
+key_t_arr key-------------------------------要删除的键值
 */
-static int leaf_remove(struct bplus_tree *tree, struct bplus_node *leaf, key_t key) {
+static int leaf_remove(struct bplus_tree *tree, struct bplus_node *leaf, key_t_arr key) {
     int remove = key_binary_search(leaf, key);
     /*要删除的键值不存在*/
     if (remove < 0) {
@@ -1234,7 +1346,7 @@ static int leaf_remove(struct bplus_tree *tree, struct bplus_node *leaf, key_t k
 /*
 删除节点
 */
-static int bplus_tree_delete(struct bplus_tree *tree, key_t key) {
+static int bplus_tree_delete(struct bplus_tree *tree, key_t_arr key) {
     struct bplus_node *node = node_seek(tree, tree->root);
     while (node != NULL) {
         /*叶子节点，直接进行删除操作*/
@@ -1257,7 +1369,7 @@ static int bplus_tree_delete(struct bplus_tree *tree, key_t key) {
 /*
 查找结点的入口
 */
-long bplus_tree_get(struct bplus_tree *tree, key_t key) {
+long bplus_tree_get(struct bplus_tree *tree, key_t_arr key) {
     return bplus_tree_search(tree, key);
 }
 
@@ -1266,7 +1378,7 @@ long bplus_tree_get(struct bplus_tree *tree, key_t key) {
 插入节点
 删除节点
 */
-int bplus_tree_put(struct bplus_tree *tree, key_t key, long data) {
+int bplus_tree_put(struct bplus_tree *tree, key_t_arr key, long data) {
     if (data) {
         return bplus_tree_insert(tree, key, data);
     } else {
@@ -1274,15 +1386,23 @@ int bplus_tree_put(struct bplus_tree *tree, key_t key, long data) {
     }
 }
 
-
-long *bplus_tree_get_range(struct bplus_tree *tree, key_t key1, key_t key2) {
+/*
+获取范围
+*/
+long bplus_tree_get_range(struct bplus_tree *tree, key_t_arr key1, key_t_arr key2) {
     long start = -1;
-    key_t min = key1 <= key2 ? key1 : key2;
-    key_t max = min == key1 ? key2 : key1;
-    int len = max - min;
-
-    long *results = (long *) malloc(len * sizeof(long));
-    int count = 0;
+//    key_t_arr min = key1 <= key2 ? key1 : key2;
+//    key_t_arr max = min == key1 ? key2 : key1;
+//todo
+    key_t_arr min = {0};
+    key_t_arr max = {0};
+    if (strcmp(key1, key2) <= 0) {
+        memcpy(min, key1, sizeof(key_t_arr));
+        memcpy(max, key2, sizeof(key_t_arr));
+    } else {
+        memcpy(min, key2, sizeof(key_t_arr));
+        memcpy(max, key1, sizeof(key_t_arr));
+    }
 
     struct bplus_node *node = node_seek(tree, tree->root);
     while (node != NULL) {
@@ -1296,9 +1416,6 @@ long *bplus_tree_get_range(struct bplus_tree *tree, key_t key1, key_t key2) {
             }
             while (node != NULL && key(node)[i] <= max) {
                 start = data(node)[i];
-                //printf("start is %ld\n", start);
-                results[count] = start;
-                count++;
                 if (++i >= node->children) {
                     node = node_seek(tree, node->next);
                     i = 0;
@@ -1314,183 +1431,8 @@ long *bplus_tree_get_range(struct bplus_tree *tree, key_t key1, key_t key2) {
             }
         }
     }
-    return results;
-}
 
-int get_greater_amount(struct bplus_tree *tree, key_t key) {
-    long start = -1;
-    key_t min = key;
-    int count = 0;
-
-    struct bplus_node *node = node_seek(tree, tree->root);
-    while (node != NULL) {
-        int i = key_binary_search(node, min + 1);
-        if (is_leaf(node)) {
-            if (i < 0) {
-                i = -i - 1;
-                if (i >= node->children) {
-                    node = node_seek(tree, node->next);
-                }
-            }
-            //计数
-            while (node != NULL) {
-                count++;
-                if (++i >= node->children) {
-                    node = node_seek(tree, node->next);
-                    i = 0;
-                }
-            }
-            break;
-        } else {
-            if (i >= 0) {
-                node = node_seek(tree, sub(node)[i + 1]);
-            } else {
-                i = -i - 1;
-                node = node_seek(tree, sub(node)[i]);
-            }
-        }
-    }
-    return count;
-}
-
-
-long *bplus_tree_get_more_than(struct bplus_tree *tree, key_t key, int *amount) {
-    long start = -1;
-    key_t min = key;
-    long *results = NULL;
-    int count = 0;
-    struct bplus_node *temp = NULL;
-
-
-    count = get_greater_amount(tree, key);
-    *amount = count;
-    if (count == 0) {
-        return NULL;
-    }
-    results = malloc(count * sizeof(long));
-    count = 0;
-
-    struct bplus_node *node = node_seek(tree, tree->root);
-    while (node != NULL) {
-        int i = key_binary_search(node, min + 1);
-        if (is_leaf(node)) {
-            if (i < 0) {
-                i = -i - 1;
-                if (i >= node->children) {
-                    node = node_seek(tree, node->next);
-                }
-            }
-            //计数
-            while (node != NULL) {
-                start = data(node)[i];
-                results[count] = start;
-                count++;
-                if (++i >= node->children) {
-                    node = node_seek(tree, node->next);
-                    i = 0;
-                }
-            }
-
-            break;
-        } else {
-            if (i >= 0) {
-                node = node_seek(tree, sub(node)[i + 1]);
-            } else {
-                i = -i - 1;
-                node = node_seek(tree, sub(node)[i]);
-            }
-        }
-    }
-    return results;
-}
-
-int get_less_amount(struct bplus_tree *tree, key_t key) {
-    key_t max = key;
-    int count = 0;
-
-    struct bplus_node *node = node_seek(tree, tree->root);
-    while (node != NULL) {
-        int i = key_binary_search(node, max - 1);
-        if (is_leaf(node)) {
-            if (i < 0) {
-                i = -i - 1;
-                if (i >= node->children) {
-                    node = node_seek(tree, node->next);
-                }
-            }
-            while (node != NULL) {
-                count++;
-                //todo
-                //printf("start is ====%ld\n",start);
-                if (--i < 0) {
-                    node = node_seek(tree, node->prev);
-                    if (node == NULL) {
-                        break;
-                    }
-                    i = node->children;
-                }
-            }
-            break;
-        } else {
-            if (i >= 0) {
-                node = node_seek(tree, sub(node)[i + 1]);
-            } else {
-                i = -i - 1;
-                node = node_seek(tree, sub(node)[i]);
-            }
-        }
-    }
-    return count;
-}
-
-long *bplus_tree_less_than(struct bplus_tree *tree, key_t key, int *amount) {
-    long start = -1;
-    key_t max = key;
-    long *results = NULL;
-    int count = 0;
-
-    count = get_less_amount(tree, key);
-    *amount = count;
-    if (count == 0) {
-        return NULL;
-    }
-    results = malloc(count * sizeof(long));
-    count = 0;
-
-    struct bplus_node *node = node_seek(tree, tree->root);
-    while (node != NULL) {
-        int i = key_binary_search(node, max - 1);
-        if (is_leaf(node)) {
-            if (i < 0) {
-                i = -i - 1;
-                if (i >= node->children) {
-                    node = node_seek(tree, node->next);
-                }
-            }
-            while (node != NULL) {
-                start = data(node)[i];
-                results[count] = start;
-                count++;
-                if (--i < 0) {
-                    node = node_seek(tree, node->prev);
-                    if (node == NULL) {
-                        break;
-                    }
-                    i = node->children;
-                }
-            }
-            break;
-        } else {
-            if (i >= 0) {
-                node = node_seek(tree, sub(node)[i + 1]);
-            } else {
-                i = -i - 1;
-                node = node_seek(tree, sub(node)[i]);
-            }
-        }
-    }
-
-    return results;
+    return start;
 }
 
 /*
@@ -1562,7 +1504,7 @@ static inline ssize_t offset_store(int fd, off_t offset) {
 /*
 B+树初始化
 char *filename----------文件名
-int block_size----------文件大小？节点大小block size（默认4KB）
+int block_size----------文件大小
 返回--------------------B+树头节点结构体指针
 */
 struct bplus_tree *bplus_tree_init(char *filename, int block_size) {
@@ -1575,21 +1517,21 @@ struct bplus_tree *bplus_tree_init(char *filename, int block_size) {
         return NULL;
     }
 
-    /*节点大小不是2的平方*/
+    /*文件大小不是2的平方*/
     if ((block_size & (block_size - 1)) != 0) {
         fprintf(stderr, "Block size must be pow of 2!\n");
         return NULL;
     }
 
-    /*节点size太小*/
+    /*文件容量太小*/
     if (block_size < (int) sizeof(node)) {
         fprintf(stderr, "block size is too small for one node!\n");
         return NULL;
     }
 
     _block_size = block_size;
-    _max_order = (block_size - sizeof(node)) / (sizeof(key_t) + sizeof(off_t));
-    _max_entries = (block_size - sizeof(node)) / (sizeof(key_t) + sizeof(long));
+    _max_order = (block_size - sizeof(node)) / (sizeof(key_t_arr) + sizeof(off_t));
+    _max_entries = (block_size - sizeof(node)) / (sizeof(key_t_arr) + sizeof(long));
 
     /*文件容量太小*/
     if (_max_order <= 2) {
@@ -1632,11 +1574,11 @@ struct bplus_tree *bplus_tree_init(char *filename, int block_size) {
         tree->file_size = 0;
     }
 
-    /*设置节点内关键字和数据最大个数,如果是256都是18*/
-    _max_order = (_block_size - sizeof(node)) / (sizeof(key_t) + sizeof(off_t));
-    _max_entries = (_block_size - sizeof(node)) / (sizeof(key_t) + sizeof(long));
-    printf("config node order:%d and leaf entries:%d and _block_size:%d ,sizeof key_t:%lu\n", _max_order, _max_entries,
-           _block_size, sizeof(key_t));
+    /*设置节点内关键字和数据最大个数*/
+    _max_order = (_block_size - sizeof(node)) / (sizeof(key_t_arr) + sizeof(off_t));
+    _max_entries = (_block_size - sizeof(node)) / (sizeof(key_t_arr) + sizeof(long));
+    printf("config node order:%d and leaf entries:%d and _block_size:%d raw node size is %lu node size is %lu\n",
+           _max_order, _max_entries, _block_size, sizeof(node), (sizeof(key_t_arr) + sizeof(long)));
 
     /*申请和初始化节点缓存*/
     tree->caches = malloc(_block_size * MIN_CACHE_NUM);
@@ -1706,12 +1648,14 @@ static void node_key_dump(struct bplus_node *node) {
     if (is_leaf(node)) {
         printf("leaf:");
         for (i = 0; i < node->children; i++) {
-            printf(" %d", key(node)[i]);
+            //todo
+            printf(" %s", key(node)[i]);
         }
     } else {
         printf("node:");
         for (i = 0; i < node->children - 1; i++) {
-            printf(" %d", key(node)[i]);
+            //todo
+            printf(" %s", key(node)[i]);
         }
     }
     printf("\n");
@@ -1793,9 +1737,4 @@ void bplus_tree_dump(struct bplus_tree *tree) {
             level--;
         }
     }
-}
-
-void bt_free(void *ptr) {
-    free(ptr);
-    ptr = NULL;
 }
