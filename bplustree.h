@@ -200,7 +200,6 @@ bplus_tree_deinit---------------------B+树关闭操作
 bplus_open----------------------------B+树开启操作
 bplus_close---------------------------B+树关闭操作
 */
-void bplus_tree_dump(struct bplus_tree *tree);
 
 long bplus_tree_get(struct bplus_tree *tree, key_t key);
 
@@ -216,10 +215,6 @@ long *bplus_tree_less_than(struct bplus_tree *tree, key_t key,int *amount);
 struct bplus_tree *bplus_tree_init(char *filename, int block_size);
 
 void bplus_tree_deinit(struct bplus_tree *tree);
-
-int bplus_open(char *filename);
-
-void bplus_close(int fd);
 
 /*_BPLUS_TREE_H*/
 #endif  
