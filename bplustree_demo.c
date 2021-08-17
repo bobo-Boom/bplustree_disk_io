@@ -30,7 +30,6 @@ static void stdin_flush(void) {
 }
 
 
-
 int main(void) {
 
     //B+树初始化。
@@ -39,12 +38,12 @@ int main(void) {
 
     //插入数据
     for (int i = 0; i < 10000; i++) {
-        bplus_tree_put(tree, i,  i);
+        bplus_tree_put(tree, i, i);
     }
 
 //
 //    //获取数据
-//    long pageIndex = bplus_tree_get(tree, 3000);
+//    long pageIndex = bplus_tree_get(tree, 10000);
 //    printf("pageIndex is :%ld\n", pageIndex);
 //
 //
@@ -63,9 +62,9 @@ int main(void) {
 //     }
 //     free(results);
 
-    printf("小于3099");
-    long *results = bplus_tree_less_than(tree, 9000,&amount);
-    printf("amount  is  ================= %d\n",amount);
+    printf("小于9999");
+    long *results = bplus_tree_less_than(tree, 9999, &amount);
+    printf("amount  is  ================= %d\n", amount);
     for (int i = 0; i < amount; i++) {
         printf("data is %ld\n", results[i]);
     }

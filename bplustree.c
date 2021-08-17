@@ -1412,7 +1412,7 @@ int get_less_amount(struct bplus_tree *tree, key_t key) {
                     if (node == NULL) {
                         break;
                     }
-                    i = node->children;
+                    i = node->children-1;
                 }
             }
             break;
@@ -1454,6 +1454,7 @@ long *bplus_tree_less_than(struct bplus_tree *tree, key_t key, int *amount) {
             }
             while (node != NULL) {
                 start = data(node)[i];
+                printf("start is %ld, key is %d\n",start,key(node)[i]);
                 results[count] = start;
                 count++;
                 if (--i < 0) {
@@ -1461,7 +1462,7 @@ long *bplus_tree_less_than(struct bplus_tree *tree, key_t key, int *amount) {
                     if (node == NULL) {
                         break;
                     }
-                    i = node->children;
+                    i = node->children-1;
                 }
             }
             break;
