@@ -44,7 +44,7 @@ int main(void) {
         printf("data%d is %ld\n", i, data);
     }
 
-    bplus_tree_deinit(tree);
+    bplus_tree_deinit_str(tree);
 
 
     //int tree
@@ -58,9 +58,9 @@ int main(void) {
     }
 
 
-    //获取数据
-    long pageIndex = bplus_tree_get(tree, 10000);
-    printf("pageIndex is :%ld\n", pageIndex);
+//    //获取数据
+//    long pageIndex = bplus_tree_get(tree1, 10000);
+//    printf("pageIndex is :%ld\n", pageIndex);
 
 
     long *rets = bplus_tree_get_range(tree1, 3000, 4009, &amount);

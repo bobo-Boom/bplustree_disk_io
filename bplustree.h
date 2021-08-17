@@ -171,7 +171,7 @@ long bplus_tree_get_range_str(struct bplus_tree *tree, key_t_arr key1, key_t_arr
 
 struct bplus_tree *bplus_tree_init_str(char *filename, int block_size);
 
-
+void bplus_tree_deinit_str(struct bplus_tree *tree);
 /*
 关键字key为int的操作方法
 */
@@ -187,12 +187,13 @@ long *bplus_tree_less_than(struct bplus_tree *tree, key_t key, int *amount);
 
 struct bplus_tree *bplus_tree_init(char *filename, int block_size);
 
+void bplus_tree_deinit(struct bplus_tree *tree);
 /*
  common
  */
 int bplus_open(char *filename);
 void bplus_close(int fd);
-void bplus_tree_deinit(struct bplus_tree *tree);
+
 
 /*_BPLUS_TREE_H*/
 #endif  

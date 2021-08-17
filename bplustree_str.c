@@ -1919,7 +1919,7 @@ B+树的关闭操作
 打开.boot文件
 */
 //todo
-void bplus_tree_deinit(struct bplus_tree *tree) {
+void bplus_tree_deinit_str(struct bplus_tree *tree) {
     /*向.boot写入B+树的3个配置数据*/
     int fd = open(tree->filename, O_CREAT | O_RDWR, 0644);
     assert(fd >= 0);

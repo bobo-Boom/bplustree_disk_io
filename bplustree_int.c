@@ -1674,27 +1674,27 @@ struct bplus_tree *bplus_tree_init(char *filename, int block_size) {
 B+树的关闭操作
 打开.boot文件
 */
-//void bplus_tree_deinit(struct bplus_tree *tree) {
-//    /*向.boot写入B+树的3个配置数据*/
-//    int fd = open(tree->filename, O_CREAT | O_RDWR, 0644);
-//    assert(fd >= 0);
-//    assert(offset_store(fd, tree->root) == ADDR_STR_WIDTH);
-//    assert(offset_store(fd, _block_size) == ADDR_STR_WIDTH);
-//    assert(offset_store(fd, tree->file_size) == ADDR_STR_WIDTH);
-//
-//    /*将空闲块存储在文件中以备将来重用*/
-//    struct list_head *pos, *n;
-//    list_for_each_safe(pos, n, &tree->free_blocks) {
-//        list_del(pos);
-//        struct free_block *block = list_entry(pos, struct free_block, link);
-//        assert(offset_store(fd, block->offset) == ADDR_STR_WIDTH);
-//        free(block);
-//    }
-//
-//    bplus_close(tree->fd);
-//    free(tree->caches);
-//    free(tree);
-//}
+void bplus_tree_deinit(struct bplus_tree *tree) {
+    /*向.boot写入B+树的3个配置数据*/
+    int fd = open(tree->filename, O_CREAT | O_RDWR, 0644);
+    assert(fd >= 0);
+    assert(offset_store(fd, tree->root) == ADDR_STR_WIDTH);
+    assert(offset_store(fd, _block_size) == ADDR_STR_WIDTH);
+    assert(offset_store(fd, tree->file_size) == ADDR_STR_WIDTH);
+
+    /*将空闲块存储在文件中以备将来重用*/
+    struct list_head *pos, *n;
+    list_for_each_safe(pos, n, &tree->free_blocks) {
+        list_del(pos);
+        struct free_block *block = list_entry(pos, struct free_block, link);
+        assert(offset_store(fd, block->offset) == ADDR_STR_WIDTH);
+        free(block);
+    }
+
+    bplus_close(tree->fd);
+    free(tree->caches);
+    free(tree);
+}
 
 /*
 返回节点的children个数
