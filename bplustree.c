@@ -1259,14 +1259,12 @@ int bplus_tree_put(struct bplus_tree *tree, key_t key, long data) {
     }
 }
 
-
-long *bplus_tree_get_range(struct bplus_tree *tree, key_t key1, key_t key2) {
+int get_range_amount(struct bplus_tree *tree, key_t key1, key_t key2) {
     long start = -1;
     key_t min = key1 <= key2 ? key1 : key2;
     key_t max = min == key1 ? key2 : key1;
-    int len = max - min;
 
-    long *results = (long *) malloc(len * sizeof(long));
+
     int count = 0;
 
     struct bplus_node *node = node_seek(tree, tree->root);
@@ -1279,9 +1277,52 @@ long *bplus_tree_get_range(struct bplus_tree *tree, key_t key1, key_t key2) {
                     node = node_seek(tree, node->next);
                 }
             }
-            while (node != NULL && key(node)[i] <= max) {
+            while (node != NULL && key(node)[i] < max) {
+                count++;
+                if (++i >= node->children) {
+                    node = node_seek(tree, node->next);
+                    i = 0;
+                }
+            }
+            break;
+        } else {
+            if (i >= 0) {
+                node = node_seek(tree, sub(node)[i + 1]);
+            } else {
+                i = -i - 1;
+                node = node_seek(tree, sub(node)[i]);
+            }
+        }
+    }
+    return count;
+}
+
+long *bplus_tree_get_range(struct bplus_tree *tree, key_t key1, key_t key2, int *amount) {
+    long start = -1;
+    key_t min = key1 <= key2 ? key1 : key2;
+    key_t max = min == key1 ? key2 : key1;
+    int count = 0;
+
+    count = get_range_amount(tree, key1, key2);
+    *amount=count;
+    if (count == 0) {
+        return NULL;
+    }
+
+    long *results = (long *) malloc(count * sizeof(long));
+    count = 0;
+    struct bplus_node *node = node_seek(tree, tree->root);
+    while (node != NULL) {
+        int i = key_binary_search(node, min);
+        if (is_leaf(node)) {
+            if (i < 0) {
+                i = -i - 1;
+                if (i >= node->children) {
+                    node = node_seek(tree, node->next);
+                }
+            }
+            while (node != NULL && key(node)[i] < max) {
                 start = data(node)[i];
-                //printf("start is %ld\n", start);
                 results[count] = start;
                 count++;
                 if (++i >= node->children) {
@@ -1412,7 +1453,7 @@ int get_less_amount(struct bplus_tree *tree, key_t key) {
                     if (node == NULL) {
                         break;
                     }
-                    i = node->children-1;
+                    i = node->children - 1;
                 }
             }
             break;
@@ -1454,7 +1495,7 @@ long *bplus_tree_less_than(struct bplus_tree *tree, key_t key, int *amount) {
             }
             while (node != NULL) {
                 start = data(node)[i];
-                printf("start is %ld, key is %d\n",start,key(node)[i]);
+                printf("start is %ld, key is %d\n", start, key(node)[i]);
                 results[count] = start;
                 count++;
                 if (--i < 0) {
@@ -1462,7 +1503,7 @@ long *bplus_tree_less_than(struct bplus_tree *tree, key_t key, int *amount) {
                     if (node == NULL) {
                         break;
                     }
-                    i = node->children-1;
+                    i = node->children - 1;
                 }
             }
             break;

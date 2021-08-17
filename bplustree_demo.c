@@ -35,6 +35,7 @@ int main(void) {
     //B+树初始化。
     struct bplus_tree *tree = NULL;
     tree = bplus_tree_init("./data.index", 4096);
+    int amount = 0;
 
     //插入数据
     for (int i = 0; i < 10000; i++) {
@@ -46,13 +47,14 @@ int main(void) {
 //    long pageIndex = bplus_tree_get(tree, 10000);
 //    printf("pageIndex is :%ld\n", pageIndex);
 //
-//
-//    long *rets = bplus_tree_get_range(tree, 3000, 3009);
-//    for (int i = 0; i < 10; i++) {
-//        printf("range results : %ld\n", rets[i]);
-//    }
-//    free(rets);
-    int amount = 0;
+
+
+    long *rets = bplus_tree_get_range(tree, 3000, 4009, &amount);
+    for (int i = 0; i < amount; i++) {
+        printf("range results : %ld\n", rets[i]);
+    }
+    free(rets);
+
 
 //     printf("大于3000\n");
 //     long * results=bplus_tree_get_more_than(tree, 9800,&amount);
@@ -62,13 +64,13 @@ int main(void) {
 //     }
 //     free(results);
 
-    printf("小于9999");
-    long *results = bplus_tree_less_than(tree, 9999, &amount);
-    printf("amount  is  ================= %d\n", amount);
-    for (int i = 0; i < amount; i++) {
-        printf("data is %ld\n", results[i]);
-    }
-    free(results);
+//    printf("小于9999");
+//    long *results = bplus_tree_less_than(tree, 9999, &amount);
+//    printf("amount  is  ================= %d\n", amount);
+//    for (int i = 0; i < amount; i++) {
+//        printf("data is %ld\n", results[i]);
+//    }
+//    free(results);
 
     //关闭B+树
     bplus_tree_deinit(tree);
