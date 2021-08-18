@@ -1321,7 +1321,7 @@ int get_greater_amount(struct bplus_tree *tree, key_t key) {
 
     struct bplus_node *node = node_seek(tree, tree->root);
     while (node != NULL) {
-        int i = key_binary_search(node, min + 1);
+        int i = key_binary_search(node, min);
         if (is_leaf(node)) {
             if (i < 0) {
                 i = -i - 1;
@@ -1369,7 +1369,7 @@ long *bplus_tree_get_more_than(struct bplus_tree *tree, key_t key, int *amount) 
 
     struct bplus_node *node = node_seek(tree, tree->root);
     while (node != NULL) {
-        int i = key_binary_search(node, min + 1);
+        int i = key_binary_search(node, min);
         if (is_leaf(node)) {
             if (i < 0) {
                 i = -i - 1;
@@ -1407,7 +1407,7 @@ int get_less_amount(struct bplus_tree *tree, key_t key) {
 
     struct bplus_node *node = node_seek(tree, tree->root);
     while (node != NULL) {
-        int i = key_binary_search(node, max - 1);
+        int i = key_binary_search(node, max);
         if (is_leaf(node)) {
             if (i < 0) {
                 i = -i - 1;
@@ -1454,7 +1454,7 @@ long *bplus_tree_less_than(struct bplus_tree *tree, key_t key, int *amount) {
 
     struct bplus_node *node = node_seek(tree, tree->root);
     while (node != NULL) {
-        int i = key_binary_search(node, max - 1);
+        int i = key_binary_search(node, max );
         if (is_leaf(node)) {
             if (i < 0) {
                 i = -i - 1;
