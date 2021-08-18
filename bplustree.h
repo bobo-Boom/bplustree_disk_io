@@ -11,10 +11,44 @@
 #include<sys/types.h>
 #include<sys/stat.h>
 /*
-最少缓冲数目，缓冲最少需要5个
+最少缓冲数目，我们最多需要5个节点的缓冲足矣
 节点自身，左兄弟节点，右兄弟节点，兄弟的兄弟节点，父节点
+
 */
 #define MIN_CACHE_NUM 5
+
+/*
+偏移量的枚举
+INVALID_OFFSET非法偏移量
+*/
+enum {
+    INVALID_OFFSET = 0xdeadbeef,
+};
+
+/*
+是否为叶子节点的枚举
+叶子节点
+非叶子节点
+*/
+enum {
+    BPLUS_TREE_LEAF,
+    BPLUS_TREE_NON_LEAF = 1,
+};
+
+/*
+兄弟节点的枚举
+左兄弟
+右兄弟
+*/
+enum {
+    LEFT_SIBLING,
+    RIGHT_SIBLING = 1,
+};
+
+/*16位数据宽度*/
+#define ADDR_STR_WIDTH 16
+
+
 
 /*得到struct bplus_tree内free_blocks的偏移量*/
 #define list_entry(ptr, type, member) \
@@ -35,8 +69,9 @@
         for (pos = (head)->next, n = pos->next; pos != (head); \
                 pos = n, n = pos->next)
 
-typedef char key_t_arr[64];
 typedef int key_t;
+
+typedef char key_t_arr[128];
 
 /*
 链表头部
@@ -133,6 +168,8 @@ typedef struct bplus_node {
 struct list_head link---------链表头部，指向上一个节点和下一个节点
 off_t offset------------------记录偏移地址
 */
+//空洞节点列表
+//空洞是指上次删除节点的标记，可用于下次新插入节点的位置，优先于追加
 typedef struct free_block {
     struct list_head link;
     off_t offset;
@@ -149,7 +186,7 @@ off_t root--------------------------B+树根节点
 off_t file_size---------------------文件大小
 struct list_head free_blocks--------链表指针
 */
-struct bplus_tree {
+typedef struct bplus_tree {
     char *caches;
     int used[MIN_CACHE_NUM];
     char filename[1024];
@@ -158,7 +195,7 @@ struct bplus_tree {
     off_t root;
     off_t file_size;
     struct list_head free_blocks;
-}bplus_tree;
+} bplus_tree;
 
 /*
 关键字key为字符数组的操作方法
@@ -172,6 +209,7 @@ long bplus_tree_get_range_str(struct bplus_tree *tree, key_t_arr key1, key_t_arr
 struct bplus_tree *bplus_tree_init_str(char *filename, int block_size);
 
 void bplus_tree_deinit_str(struct bplus_tree *tree);
+
 /*
 关键字key为int的操作方法
 */
@@ -188,12 +226,21 @@ long *bplus_tree_less_than(struct bplus_tree *tree, key_t key, int *amount);
 struct bplus_tree *bplus_tree_init(char *filename, int block_size);
 
 void bplus_tree_deinit(struct bplus_tree *tree);
+
 /*
  common
  */
 int bplus_open(char *filename);
+
 void bplus_close(int fd);
 
+off_t str_to_hex(char *c, int len);
+
+void hex_to_str(off_t offset, char *buf, int len);
+
+off_t offset_load(int fd);
+
+ssize_t offset_store(int fd, off_t offset);
 
 /*_BPLUS_TREE_H*/
 #endif  

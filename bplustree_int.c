@@ -1,35 +1,6 @@
 #include"bplustree.h"
 
-/*
-偏移量的枚举
-INVALID_OFFSET非法偏移量
-*/
-enum {
-    INVALID_OFFSET = 0xdeadbeef,
-};
 
-/*
-是否为叶子节点的枚举
-叶子节点
-非叶子节点
-*/
-enum {
-    BPLUS_TREE_LEAF,
-    BPLUS_TREE_NON_LEAF = 1,
-};
-
-/*
-兄弟节点的枚举
-左兄弟
-右兄弟
-*/
-enum {
-    LEFT_SIBLING,
-    RIGHT_SIBLING = 1,
-};
-
-/*16位数据宽度*/
-#define ADDR_STR_WIDTH 16
 
 /*B+树节点node末尾的偏移地址，即key的首地址*/
 #define offset_ptr(node) ((char *) (node) + sizeof(*node))
@@ -59,7 +30,6 @@ static int _max_order;
 static inline int is_leaf(struct bplus_node *node) {
     return node->type == BPLUS_TREE_LEAF;
 }
-
 /*
 键值二分查找
 */
@@ -1380,11 +1350,13 @@ int get_greater_amount(struct bplus_tree *tree, key_t key) {
     return count;
 }
 
+
 long *bplus_tree_get_more_than(struct bplus_tree *tree, key_t key, int *amount) {
     long start = -1;
     key_t min = key;
     long *results = NULL;
     int count = 0;
+    struct bplus_node *temp = NULL;
 
 
     count = get_greater_amount(tree, key);
@@ -1516,71 +1488,6 @@ long *bplus_tree_less_than(struct bplus_tree *tree, key_t key, int *amount) {
     return results;
 }
 
-
-//打开B+树
-//返回fd
-//*/
-//int bplus_open(char *filename) {
-//    return open(filename, O_CREAT | O_RDWR, 0644);
-//}
-//
-
-//关闭B+树
-//*/
-//void bplus_close(int fd) {
-//    close(fd);
-//}
-
-/*
-字符串转16进制
-*/
-static off_t str_to_hex(char *c, int len) {
-    off_t offset = 0;
-    while (len-- > 0) {
-        if (isdigit(*c)) {
-            offset = offset * 16 + *c - '0';
-        } else if (isxdigit(*c)) {
-            if (islower(*c)) {
-                offset = offset * 16 + *c - 'a' + 10;
-            } else {
-                offset = offset * 16 + *c - 'A' + 10;
-            }
-        }
-        c++;
-    }
-    return offset;
-}
-
-/*
-16进制转字符串
-*/
-static inline void hex_to_str(off_t offset, char *buf, int len) {
-    const static char *hex = "0123456789ABCDEF";
-    while (len-- > 0) {
-        buf[len] = hex[offset & 0xf];
-        offset >>= 4;
-    }
-}
-
-/*
-加载文件数据，每16位记录一个信息
-如果读取到数据，即len>0，返回数据
-如果没有读到数据，即len<=0，返回INVALID_OFFSET
-*/
-static inline off_t offset_load(int fd) {
-    char buf[ADDR_STR_WIDTH];
-    ssize_t len = read(fd, buf, sizeof(buf));
-    return len > 0 ? str_to_hex(buf, sizeof(buf)) : INVALID_OFFSET;
-}
-
-/*
-存储B+相关数据
-*/
-static inline ssize_t offset_store(int fd, off_t offset) {
-    char buf[ADDR_STR_WIDTH];
-    hex_to_str(offset, buf, sizeof(buf));
-    return write(fd, buf, sizeof(buf));
-}
 
 /*
 B+树初始化
