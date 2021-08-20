@@ -16,11 +16,19 @@ struct bplus_tree_config {
     int block_size;
 };
 
-char *mmap_btree_file(char *file_name, off_t file_size) {
+int get_file_size(char* filename){
+    struct stat temp;
+    stat(filename,&temp);
+    return temp.st_size;
+}
 
-    int fd, i;
+
+char *mmap_btree_file(char *file_name) {
+
+    int fd, i,file_size;
     char *p_map, *p_index;
 
+    file_size= get_file_size(file_name);
     fd = open(file_name, O_RDWR, 0644);
 
     p_map = (char *) mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
@@ -42,6 +50,11 @@ void munmap_btree_file(char *m_ptr, off_t file_size) {
     munmap(m_ptr, file_size);
 
 };
+int get_file_size(char* filename){
+    struct stat temp;
+    stat(filename,&temp);
+    return temp.st_size;
+}
 
 
 int main(void) {
@@ -74,27 +87,33 @@ int main(void) {
 
 
     //int tree
-    struct bplus_tree *tree1 = NULL;
-    tree1 = bplus_tree_init("./data_int.index", 4096);
-    int amount = 0;
+//    struct bplus_tree *tree1 = NULL;
+//    tree1 = bplus_tree_init("./data_int.index", 4096);
+//    int amount = 0;
+//
+//    //插入数据
+//    for (int i = 0; i < 10000; i++) {
+//        bplus_tree_put(tree1, i, i);
+//    }
+////    //获取数据
+////    long pageIndex = bplus_tree_get(tree1, 10000);
+////    printf("pageIndex is :%ld\n", pageIndex);
+//
+//
+//    long *rets = bplus_tree_get_range(tree1, 3000, 4009, &amount);
+//    for (int i = 0; i < amount; i++) {
+//        printf("range results : %ld\n", rets[i]);
+//    }
+//    free(rets);
+//
+//    bplus_tree_deinit(tree1);
+    int file_size;
+    char *boot_ptr = mmap_btree_file("./data_int.index.boot");
+    char *boot_ptr = mmap_btree_file("./data_int.boot");
 
-    //插入数据
-    for (int i = 0; i < 10000; i++) {
-        bplus_tree_put(tree1, i, i);
-    }
-//    //获取数据
-//    long pageIndex = bplus_tree_get(tree1, 10000);
-//    printf("pageIndex is :%ld\n", pageIndex);
+    file_size = get_file_size("./data_int.index.boot");
 
 
-    long *rets = bplus_tree_get_range(tree1, 3000, 4009, &amount);
-    for (int i = 0; i < amount; i++) {
-        printf("range results : %ld\n", rets[i]);
-    }
-    free(rets);
-
-    bplus_tree_deinit(tree1);
-    char *m_ptr = mmap_btree_file("./test.txt", 5);
 
     munmap_btree_file(m_ptr, 5);
     return 0;
