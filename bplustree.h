@@ -197,18 +197,18 @@ typedef struct bplus_tree {
     struct list_head free_blocks;
 } bplus_tree;
 
-/*
-关键字key为字符数组的操作方法
-*/
-long bplus_tree_get_str(struct bplus_tree *tree, key_t_arr key);
-
-int bplus_tree_put_str(struct bplus_tree *tree, key_t_arr key, long data);
-
-long bplus_tree_get_range_str(struct bplus_tree *tree, key_t_arr key1, key_t_arr key2);
-
-struct bplus_tree *bplus_tree_init_str(char *filename, int block_size);
-
-void bplus_tree_deinit_str(struct bplus_tree *tree);
+//*
+//关键字key为字符数组的操作方法
+//*/
+//long bplus_tree_get_str(struct bplus_tree *tree, key_t_arr key);
+//
+//int bplus_tree_put_str(struct bplus_tree *tree, key_t_arr key, long data);
+//
+//long bplus_tree_get_range_str(struct bplus_tree *tree, key_t_arr key1, key_t_arr key2);
+//
+//struct bplus_tree *bplus_tree_init_str(char *filename, int block_size);
+//
+//void bplus_tree_deinit_str(struct bplus_tree *tree);
 
 /*
 关键字key为int的操作方法

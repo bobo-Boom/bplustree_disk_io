@@ -3,7 +3,7 @@
 #include<string.h>
 #include<time.h>
 #include<math.h>
-
+#include<sys/mman.h>
 #include"bplustree.h"
 
 /*
@@ -16,35 +16,61 @@ struct bplus_tree_config {
     int block_size;
 };
 
+char *mmap_btree_file(char *file_name, off_t file_size) {
+
+    int fd, i;
+    char *p_map, *p_index;
+
+    fd = open(file_name, O_RDWR, 0644);
+
+    p_map = (char *) mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
+    p_index = p_map;
+
+    for (i = 0; i < file_size; i++) {
+        printf("%c", *p_index);
+        p_index++;
+    }
+    printf("\n");
+    close(fd);
+
+    return p_map;
+
+};
+
+void munmap_btree_file(char *m_ptr, off_t file_size) {
+
+    munmap(m_ptr, file_size);
+
+};
+
 
 int main(void) {
 
-
-    struct bplus_tree_config config;
-    config.block_size = 1024;
-    strcpy(config.filename, "./data_str.index");
-    /*定义一个B+树信息结构体*/
-    struct bplus_tree *tree = NULL;
-
-    //str tree
-    //初始化B+树
-    tree = bplus_tree_init_str(config.filename, config.block_size);
-
-    for (int i = 1; i < 1000; i++) {
-        key_t_arr key = {0};
-        sprintf(key, "%d", i);
-        printf(" insert %d\n", i);
-        bplus_tree_put_str(tree, key, i);
-
-    }
-    for (int i = 1; i < 1000; i++) {
-        key_t_arr key = {0};
-        sprintf(key, "%d", i);
-        long data = bplus_tree_get_str(tree, key);
-        printf("data%d is %ld\n", i, data);
-    }
-
-    bplus_tree_deinit_str(tree);
+//    struct bplus_tree_config config;
+//    config.block_size = 1024;
+//    strcpy(config.filename, "./data_str.index");
+//    /*定义一个B+树信息结构体*/
+//    struct bplus_tree *tree = NULL;
+//
+//    //str tree
+//    //初始化B+树
+//    tree = bplus_tree_init_str(config.filename, config.block_size);
+//
+//    for (int i = 1; i < 1000; i++) {
+//        key_t_arr key = {0};
+//        sprintf(key, "%d", i);
+//        printf(" insert %d\n", i);
+//        bplus_tree_put_str(tree, key, i);
+//
+//    }
+//    for (int i = 1; i < 1000; i++) {
+//        key_t_arr key = {0};
+//        sprintf(key, "%d", i);
+//        long data = bplus_tree_get_str(tree, key);
+//        printf("data%d is %ld\n", i, data);
+//    }
+//
+//    bplus_tree_deinit_str(tree);
 
 
     //int tree
@@ -56,8 +82,6 @@ int main(void) {
     for (int i = 0; i < 10000; i++) {
         bplus_tree_put(tree1, i, i);
     }
-
-
 //    //获取数据
 //    long pageIndex = bplus_tree_get(tree1, 10000);
 //    printf("pageIndex is :%ld\n", pageIndex);
@@ -70,6 +94,10 @@ int main(void) {
     free(rets);
 
     bplus_tree_deinit(tree1);
+    char *m_ptr = mmap_btree_file("./test.txt", 5);
 
+    munmap_btree_file(m_ptr, 5);
     return 0;
 }
+
+
