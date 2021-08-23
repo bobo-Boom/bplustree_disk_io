@@ -190,7 +190,8 @@ typedef struct bplus_tree {
     char *caches;
     int used[MIN_CACHE_NUM];
     char filename[1024];
-    int fd;
+    //int fd;
+    char *fd;
     int level;
     off_t root;
     off_t file_size;
@@ -223,9 +224,11 @@ long *bplus_tree_get_more_than(struct bplus_tree *tree, key_t key, int *amount);
 
 long *bplus_tree_less_than(struct bplus_tree *tree, key_t key, int *amount);
 
-struct bplus_tree *bplus_tree_init(char *filename, int block_size);
+//struct bplus_tree *bplus_tree_init(char *filename, int block_size);
 
 void bplus_tree_deinit(struct bplus_tree *tree);
+
+struct bplus_tree *bplus_tree_load(char *tree_addr, char *tree_boot_addr, int block_size);
 
 /*
  common
@@ -238,7 +241,7 @@ off_t str_to_hex(char *c, int len);
 
 void hex_to_str(off_t offset, char *buf, int len);
 
-off_t offset_load(int fd);
+off_t offset_load(char *t_ptr, off_t *offset);
 
 ssize_t offset_store(int fd, off_t offset);
 

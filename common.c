@@ -1,4 +1,5 @@
 #include "bplustree.h"
+
 /*
 打开B+树
 返回fd
@@ -47,18 +48,19 @@ void hex_to_str(off_t offset, char *buf, int len) {
 
 /*
 加载文件数据，每16位记录一个信息
-如果读取到数据，即len>0，返回数据
-如果没有读到数据，即len<=0，返回INVALID_OFFSET
 */
-off_t offset_load(int fd) {
+//where used
+off_t offset_load(char *t_ptr, off_t *offset) {
     char buf[ADDR_STR_WIDTH];
-    ssize_t len = read(fd, buf, sizeof(buf));
-    return len > 0 ? str_to_hex(buf, sizeof(buf)) : INVALID_OFFSET;
+    char *p = memcpy(buf, t_ptr + *offset, sizeof(buf));
+    *offset=*offset+ADDR_STR_WIDTH;
+    return p != NULL ? str_to_hex(buf, sizeof(buf)) : INVALID_OFFSET;
 }
 
 /*
 存储B+相关数据
 */
+//where used
 ssize_t offset_store(int fd, off_t offset) {
     char buf[ADDR_STR_WIDTH];
     hex_to_str(offset, buf, sizeof(buf));

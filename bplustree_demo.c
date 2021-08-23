@@ -32,13 +32,14 @@ char *mmap_btree_file(char *file_name) {
     fd = open(file_name, O_RDWR, 0644);
 
     p_map = (char *) mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
-    p_index = p_map;
-
-    for (i = 0; i < file_size; i++) {
-        printf("%c", *p_index);
-        p_index++;
-    }
-    printf("\n");
+//    p_index = p_map;
+//
+//    int addr=0;
+//    for (i = 0; i < file_size; i++) {
+//        printf("%c", *p_index);
+//        p_index++;
+//    }
+//    printf("\n");
     close(fd);
 
     return p_map;
@@ -50,12 +51,6 @@ void munmap_btree_file(char *m_ptr, off_t file_size) {
     munmap(m_ptr, file_size);
 
 };
-int get_file_size(char* filename){
-    struct stat temp;
-    stat(filename,&temp);
-    return temp.st_size;
-}
-
 
 int main(void) {
 
@@ -107,15 +102,13 @@ int main(void) {
 //    free(rets);
 //
 //    bplus_tree_deinit(tree1);
-    int file_size;
+
     char *boot_ptr = mmap_btree_file("./data_int.index.boot");
-    char *boot_ptr = mmap_btree_file("./data_int.boot");
+    char *tree_ptr = mmap_btree_file("./data_int.index");
 
-    file_size = get_file_size("./data_int.index.boot");
+    struct bplus_tree *tree2 = bplus_tree_load(tree_ptr,boot_ptr,4096);
+    printf("treee2 %p\n",tree2);
 
-
-
-    munmap_btree_file(m_ptr, 5);
     return 0;
 }
 

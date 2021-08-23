@@ -30,6 +30,7 @@ static int _max_order;
 static inline int is_leaf(struct bplus_node *node) {
     return node->type == BPLUS_TREE_LEAF;
 }
+
 /*
 键值二分查找
 */
@@ -155,12 +156,14 @@ static struct bplus_node *node_seek(struct bplus_tree *tree, off_t offset) {
     for (i = 0; i < MIN_CACHE_NUM; i++) {
         if (!tree->used[i]) {
             char *buf = tree->caches + _block_size * i;
-            int len = pread(tree->fd, buf, _block_size, offset);
-            assert(len == _block_size);
+           // int len =pread(tree->fd, buf, _block_size, offset);
+            //assert(len == _block_size);
+            //todo
+            memcpy(buf,tree->fd,_block_size,offset);
             return (struct bplus_node *) buf;
         }
     }
-    assert(0);
+    return NULL;
 }
 
 /*
@@ -1275,7 +1278,7 @@ long *bplus_tree_get_range(struct bplus_tree *tree, key_t key1, key_t key2, int 
     int count = 0;
 
     count = get_range_amount(tree, key1, key2);
-    *amount=count;
+    *amount = count;
     if (count == 0) {
         return NULL;
     }
@@ -1422,7 +1425,7 @@ int get_less_amount(struct bplus_tree *tree, key_t key) {
                     if (node == NULL) {
                         break;
                     }
-                    i = node->children-1;
+                    i = node->children - 1;
                 }
             }
             break;
@@ -1454,7 +1457,7 @@ long *bplus_tree_less_than(struct bplus_tree *tree, key_t key, int *amount) {
 
     struct bplus_node *node = node_seek(tree, tree->root);
     while (node != NULL) {
-        int i = key_binary_search(node, max );
+        int i = key_binary_search(node, max);
         if (is_leaf(node)) {
             if (i < 0) {
                 i = -i - 1;
@@ -1471,7 +1474,7 @@ long *bplus_tree_less_than(struct bplus_tree *tree, key_t key, int *amount) {
                     if (node == NULL) {
                         break;
                     }
-                    i = node->children-1;
+                    i = node->children - 1;
                 }
             }
             break;
@@ -1495,24 +1498,105 @@ char *filename----------文件名
 int block_size----------文件大小？节点大小block size（默认4KB）
 返回--------------------B+树头节点结构体指针
 */
-struct bplus_tree *bplus_tree_init(char *filename, int block_size) {
+//struct bplus_tree *bplus_tree_init(char *filename, int block_size) {
+//    int i;
+//    struct bplus_node node;
+//
+//    /*文件名过长*/
+//    if (strlen(filename) >= 1024) {
+//        fprintf(stderr, "Index file name too long!\n");
+//        return NULL;
+//    }
+//
+//    /*节点大小不是2的平方*/
+//    if ((block_size & (block_size - 1)) != 0) {
+//        fprintf(stderr, "Block size must be pow of 2!\n");
+//        return NULL;
+//    }
+//
+//    /*节点size太小*/
+//    if (block_size < (int) sizeof(node)) {
+//        fprintf(stderr, "block size is too small for one node!\n");
+//        return NULL;
+//    }
+//
+//    _block_size = block_size;
+//    _max_order = (block_size - sizeof(node)) / (sizeof(key_t) + sizeof(off_t));
+//    _max_entries = (block_size - sizeof(node)) / (sizeof(key_t) + sizeof(long));
+//
+//    /*文件容量太小*/
+//    if (_max_order <= 2) {
+//        fprintf(stderr, "block size is too small for one node!\n");
+//        return NULL;
+//    }
+//
+//    /*为B+树信息节点分配内存*/
+//    struct bplus_tree *tree = calloc(1, sizeof(*tree));
+//    assert(tree != NULL);
+//    list_init(&tree->free_blocks);
+//    strcpy(tree->filename, filename);
+//
+//    /*
+//    加载boot文件，可读可写
+//    tree->filename变为.boot
+//    首次运行不存在
+//    得到信息节点的信息，每16位记录一个信息
+//    root----------------B+树根节点在.index中的偏移量
+//    block_size----------分配的空间大小
+//    file_size-----------实际空间大小
+//    */
+//    int fd = open(strcat(tree->filename, ".boot"), O_RDWR, 0644);
+//    if (fd >= 0) {
+//        tree->root = offset_load(fd);
+//        _block_size = offset_load(fd);
+//        tree->file_size = offset_load(fd);
+//
+//        /*加载freeblocks空闲数据块*/
+//        while ((i = offset_load(fd)) != INVALID_OFFSET) {
+//            struct free_block *block = malloc(sizeof(*block));
+//            assert(block != NULL);
+//            block->offset = i;
+//            list_add(&block->link, &tree->free_blocks);
+//        }
+//        close(fd);
+//    } else {
+//        tree->root = INVALID_OFFSET;
+//        _block_size = block_size;
+//        tree->file_size = 0;
+//    }
+//
+//    /*设置节点内关键字和数据最大个数,如果是256都是18*/
+//    _max_order = (_block_size - sizeof(node)) / (sizeof(key_t) + sizeof(off_t));
+//    _max_entries = (_block_size - sizeof(node)) / (sizeof(key_t) + sizeof(long));
+//    printf("config node order:%d and leaf entries:%d and _block_size:%d ,sizeof key_t:%lu\n", _max_order, _max_entries,
+//           _block_size, sizeof(key_t));
+//
+//    /*申请和初始化节点缓存*/
+//    tree->caches = malloc(_block_size * MIN_CACHE_NUM);
+//
+//    /*打开index文件，首次运行不存在，创建index文件=*/
+//    tree->fd = bplus_open(filename);
+//    assert(tree->fd >= 0);
+//    return tree;
+//}
+
+/*
+B+ load
+*/
+struct bplus_tree *bplus_tree_load(char *tree_addr, char *tree_boot_addr, int block_size) {
     int i;
+    off_t boot_file_off_t = 0;
+    off_t boot_file_size = 0;
     struct bplus_node node;
-
-    /*文件名过长*/
-    if (strlen(filename) >= 1024) {
-        fprintf(stderr, "Index file name too long!\n");
-        return NULL;
-    }
-
     /*节点大小不是2的平方*/
     if ((block_size & (block_size - 1)) != 0) {
+        //printf todo
         fprintf(stderr, "Block size must be pow of 2!\n");
         return NULL;
     }
-
     /*节点size太小*/
     if (block_size < (int) sizeof(node)) {
+        //printf todo
         fprintf(stderr, "block size is too small for one node!\n");
         return NULL;
     }
@@ -1523,6 +1607,7 @@ struct bplus_tree *bplus_tree_init(char *filename, int block_size) {
 
     /*文件容量太小*/
     if (_max_order <= 2) {
+        //  printf todo
         fprintf(stderr, "block size is too small for one node!\n");
         return NULL;
     }
@@ -1531,49 +1616,38 @@ struct bplus_tree *bplus_tree_init(char *filename, int block_size) {
     struct bplus_tree *tree = calloc(1, sizeof(*tree));
     assert(tree != NULL);
     list_init(&tree->free_blocks);
-    strcpy(tree->filename, filename);
+    strcpy(tree->filename, tree_addr);
 
     /*
     加载boot文件，可读可写
-    tree->filename变为.boot
-    首次运行不存在
-    得到信息节点的信息，每16位记录一个信息
-    root----------------B+树根节点在.index中的偏移量
-    block_size----------分配的空间大小
-    file_size-----------实际空间大小
     */
-    int fd = open(strcat(tree->filename, ".boot"), O_RDWR, 0644);
-    if (fd >= 0) {
-        tree->root = offset_load(fd);
-        _block_size = offset_load(fd);
-        tree->file_size = offset_load(fd);
-
-        /*加载freeblocks空闲数据块*/
-        while ((i = offset_load(fd)) != INVALID_OFFSET) {
-            struct free_block *block = malloc(sizeof(*block));
-            assert(block != NULL);
-            block->offset = i;
-            list_add(&block->link, &tree->free_blocks);
-        }
-        close(fd);
-    } else {
-        tree->root = INVALID_OFFSET;
-        _block_size = block_size;
-        tree->file_size = 0;
+    if (tree_boot_addr == NULL) {
+        return NULL;
     }
+    tree->root = offset_load(tree_boot_addr, &boot_file_off_t);
+    _block_size = offset_load(tree_boot_addr, &boot_file_off_t);
+    tree->file_size = offset_load(tree_boot_addr, &boot_file_off_t);
+    tree->fd=tree_addr;
 
+    //todo  bootfilesize
+    /*加载freeblocks空闲数据块*/
+    while (boot_file_off_t < boot_file_size) {
+        offset_load(tree_boot_addr, &boot_file_off_t);
+        struct free_block *block = malloc(sizeof(*block));
+        assert(block != NULL);
+        block->offset = i;
+        list_add(&block->link, &tree->free_blocks);
+    }
     /*设置节点内关键字和数据最大个数,如果是256都是18*/
     _max_order = (_block_size - sizeof(node)) / (sizeof(key_t) + sizeof(off_t));
     _max_entries = (_block_size - sizeof(node)) / (sizeof(key_t) + sizeof(long));
+    // printf todo
     printf("config node order:%d and leaf entries:%d and _block_size:%d ,sizeof key_t:%lu\n", _max_order, _max_entries,
            _block_size, sizeof(key_t));
 
     /*申请和初始化节点缓存*/
     tree->caches = malloc(_block_size * MIN_CACHE_NUM);
 
-    /*打开index文件，首次运行不存在，创建index文件=*/
-    tree->fd = bplus_open(filename);
-    assert(tree->fd >= 0);
     return tree;
 }
 
