@@ -54,67 +54,60 @@ void munmap_btree_file(char *m_ptr, off_t file_size) {
 
 int main(void) {
 
-//    struct bplus_tree_config config;
-//    config.block_size = 1024;
-//    strcpy(config.filename, "./data_str.index");
-//    /*定义一个B+树信息结构体*/
-//    struct bplus_tree *tree = NULL;
+    /*定义一个B+树信息结构体*/
+    struct bplus_tree *tree = NULL;
+
+    //str tree
+    //初始化B+树
+    char *boot_ptr = mmap_btree_file("./data_str.index.boot");
+    char *tree_ptr = mmap_btree_file("./data_str.index");
+
+    tree = bplus_tree_load_str(tree_ptr,boot_ptr, 4096);
+
+
+    for (int i = 1; i < 1000; i++) {
+        key_t_arr key = {0};
+        sprintf(key, "%d", i);
+        long data = bplus_tree_get_str(tree, key);
+        printf("data_str %d is %ld\n", i, data);
+    }
+
+
+//    //int tree
+//    char *boot_ptr = mmap_btree_file("./data_int.index.boot");
+//    char *tree_ptr = mmap_btree_file("./data_int.index");
 //
-//    //str tree
-//    //初始化B+树
-//    tree = bplus_tree_init_str(config.filename, config.block_size);
+//    struct bplus_tree *tree2 = bplus_tree_load(tree_ptr, boot_ptr, 4096);
+//    printf("treee2 %p\n", tree2);
 //
-//    for (int i = 1; i < 1000; i++) {
-//        key_t_arr key = {0};
-//        sprintf(key, "%d", i);
-//        printf(" insert %d\n", i);
-//        bplus_tree_put_str(tree, key, i);
-//
+//    //获取B+树数据
+//    for (int i = 0; i < 10000; ++i) {
+//        long ret = bplus_tree_get(tree2, i);
+//        printf("ret is  %ld\n", ret);
 //    }
-//    for (int i = 1; i < 1000; i++) {
-//        key_t_arr key = {0};
-//        sprintf(key, "%d", i);
-//        long data = bplus_tree_get_str(tree, key);
-//        printf("data%d is %ld\n", i, data);
+//
+//    //范围查询
+//    int amount = 0;
+//    long *rets = bplus_tree_get_range(tree2, 3, 10000, &amount);
+//    for (int i = 0; i < amount; ++i) {
+//        printf("%ld\n", rets[i]);
 //    }
 //
-//    bplus_tree_deinit_str(tree);
-
-    //int tree
-    char *boot_ptr = mmap_btree_file("./data_int.index.boot");
-    char *tree_ptr = mmap_btree_file("./data_int.index");
-
-    struct bplus_tree *tree2 = bplus_tree_load(tree_ptr, boot_ptr, 4096);
-    printf("treee2 %p\n", tree2);
-
-    //获取B+树数据
-    for (int i = 0; i < 10000; ++i) {
-        long ret = bplus_tree_get(tree2, i);
-        printf("ret is  %ld\n", ret);
-    }
-
-    //范围查询
-    int amount = 0;
-    long *rets = bplus_tree_get_range(tree2, 3, 10000, &amount);
-    for (int i = 0; i < amount; ++i) {
-        printf("%ld\n", rets[i]);
-    }
-
-    //小于key值的范围查询
-    rets = bplus_tree_less_than(tree2, 8888, &amount);
-    printf("======================小于范围查询===================\n");
-    for (int i = 0; i < amount; ++i) {
-        printf("%ld\n", rets[i]);
-    }
-
-    //大于范围查询
-    rets = bplus_tree_get_more_than(tree2, 300, &amount);
-    printf("=====================大于范围查询===================\n");
-    for (int i = 0; i < amount; ++i) {
-        printf("%ld\n", rets[i]);
-    }
-
-    return 0;
+//    //小于key值的范围查询
+//    rets = bplus_tree_less_than(tree2, 8888, &amount);
+//    printf("======================小于范围查询===================\n");
+//    for (int i = 0; i < amount; ++i) {
+//        printf("%ld\n", rets[i]);
+//    }
+//
+//    //大于范围查询
+//    rets = bplus_tree_get_more_than(tree2, 300, &amount);
+//    printf("=====================大于范围查询===================\n");
+//    for (int i = 0; i < amount; ++i) {
+//        printf("%ld\n", rets[i]);
+//    }
+//
+//    return 0;
 }
 
 

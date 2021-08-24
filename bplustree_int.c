@@ -24,12 +24,7 @@ static int _block_size;
 static int _max_entries;
 static int _max_order;
 
-/*
-判断是否为叶子节点
-*/
-static inline int is_leaf(struct bplus_node *node) {
-    return node->type == BPLUS_TREE_LEAF;
-}
+
 
 /*
 键值二分查找

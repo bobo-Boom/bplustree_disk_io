@@ -198,24 +198,23 @@ typedef struct bplus_tree {
     struct list_head free_blocks;
 } bplus_tree;
 
-//*
-//关键字key为字符数组的操作方法
-//*/
-//long bplus_tree_get_str(struct bplus_tree *tree, key_t_arr key);
-//
-//int bplus_tree_put_str(struct bplus_tree *tree, key_t_arr key, long data);
-//
-//long bplus_tree_get_range_str(struct bplus_tree *tree, key_t_arr key1, key_t_arr key2);
-//
-//struct bplus_tree *bplus_tree_init_str(char *filename, int block_size);
-//
-//void bplus_tree_deinit_str(struct bplus_tree *tree);
+/*
+关键字key为字符数组的操作方法
+*/
+long bplus_tree_get_str(struct bplus_tree *tree, key_t_arr key);
+
+long bplus_tree_get_range_str(struct bplus_tree *tree, key_t_arr key1, key_t_arr key2);
+
+struct bplus_tree *bplus_tree_init_str(char *filename, int block_size);
+
+void bplus_tree_deinit_str(struct bplus_tree *tree, char *tree_addr, char *tree_boot_addr);
+
+struct bplus_tree *bplus_tree_load_str(char *tree_addr, char *tree_boot_addr, int block_size);
 
 /*
 关键字key为int的操作方法
 */
 long bplus_tree_get(struct bplus_tree *tree, key_t key);
-
 
 long *bplus_tree_get_range(struct bplus_tree *tree, key_t key1, key_t key2, int *amount);
 
@@ -230,8 +229,6 @@ struct bplus_tree *bplus_tree_load(char *tree_addr, char *tree_boot_addr, int bl
 /*
  common
  */
-int bplus_open(char *filename);
-
 
 off_t str_to_hex(char *c, int len);
 
@@ -243,6 +240,7 @@ void offset_store(char* fd, off_t offset);
 
 off_t get_tree_size(char *tree_boot_addr);
 
+int is_leaf(struct bplus_node *node);
 
 /*_BPLUS_TREE_H*/
 #endif  

@@ -1,20 +1,11 @@
 #include "bplustree.h"
 
 /*
-打开B+树
-返回fd
+判断是否为叶子节点
 */
-int bplus_open(char *filename) {
-    return open(filename, O_CREAT | O_RDWR, 0644);
+int is_leaf(struct bplus_node *node) {
+    return node->type == BPLUS_TREE_LEAF;
 }
-
-/*
-关闭B+树
-*/
-void bplus_close(int fd) {
-    close(fd);
-}
-
 /*
 字符串转16进制
 */
