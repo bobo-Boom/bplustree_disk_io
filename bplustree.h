@@ -216,7 +216,6 @@ typedef struct bplus_tree {
 */
 long bplus_tree_get(struct bplus_tree *tree, key_t key);
 
-int bplus_tree_put(struct bplus_tree *tree, key_t key, long data);
 
 long *bplus_tree_get_range(struct bplus_tree *tree, key_t key1, key_t key2, int *amount);
 
@@ -224,9 +223,7 @@ long *bplus_tree_get_more_than(struct bplus_tree *tree, key_t key, int *amount);
 
 long *bplus_tree_less_than(struct bplus_tree *tree, key_t key, int *amount);
 
-//struct bplus_tree *bplus_tree_init(char *filename, int block_size);
-
-void bplus_tree_deinit(struct bplus_tree *tree);
+void bplus_tree_deinit(struct bplus_tree *tree, char *tree_addr, char *tree_boot_addr);
 
 struct bplus_tree *bplus_tree_load(char *tree_addr, char *tree_boot_addr, int block_size);
 
@@ -235,7 +232,6 @@ struct bplus_tree *bplus_tree_load(char *tree_addr, char *tree_boot_addr, int bl
  */
 int bplus_open(char *filename);
 
-void bplus_close(int fd);
 
 off_t str_to_hex(char *c, int len);
 
@@ -243,7 +239,10 @@ void hex_to_str(off_t offset, char *buf, int len);
 
 off_t offset_load(char *t_ptr, off_t *offset);
 
-ssize_t offset_store(int fd, off_t offset);
+void offset_store(char* fd, off_t offset);
+
+off_t get_tree_size(char *tree_boot_addr);
+
 
 /*_BPLUS_TREE_H*/
 #endif  

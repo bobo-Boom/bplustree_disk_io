@@ -53,7 +53,7 @@ void hex_to_str(off_t offset, char *buf, int len) {
 off_t offset_load(char *t_ptr, off_t *offset) {
     char buf[ADDR_STR_WIDTH];
     char *p = memcpy(buf, t_ptr + *offset, sizeof(buf));
-    *offset=*offset+ADDR_STR_WIDTH;
+    *offset = *offset + ADDR_STR_WIDTH;
     return p != NULL ? str_to_hex(buf, sizeof(buf)) : INVALID_OFFSET;
 }
 
@@ -61,8 +61,19 @@ off_t offset_load(char *t_ptr, off_t *offset) {
 存储B+相关数据
 */
 //where used
-ssize_t offset_store(int fd, off_t offset) {
+void offset_store(char *t_ptr, off_t offset) {
     char buf[ADDR_STR_WIDTH];
     hex_to_str(offset, buf, sizeof(buf));
-    return write(fd, buf, sizeof(buf));
+    //return write(fd, buf, sizeof(buf));
+    //todo
+    memcpy(t_ptr + offset, buf, sizeof(buf));
+}
+/*
+获取B+树文件大小
+*/
+
+off_t get_tree_size(char *tree_boot_addr){
+    off_t offset=3*ADDR_STR_WIDTH;
+    offset=offset_load(tree_boot_addr,&offset);
+    return offset;
 }
