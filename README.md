@@ -63,3 +63,11 @@ demo
 bplustree_demo.c
 ```
 
+迭代说明
+
+```
+更改 boot file 配置信息结构。
+
+BootFileSize|TreeRoot|TreeId|KyeType|BlockSize|TreeFileSize
+```
+

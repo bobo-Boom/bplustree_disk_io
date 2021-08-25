@@ -51,7 +51,7 @@ void hex_to_str(off_t offset, char *buf, int len) {
 如果没有读到数据，即len<=0，返回INVALID_OFFSET
 */
 off_t offset_load(int fd) {
-    char buf[ADDR_STR_WIDTH];
+    char buf[ADDR_STR_WIDTH]={0};
     ssize_t len = read(fd, buf, sizeof(buf));
     return len > 0 ? str_to_hex(buf, sizeof(buf)) : INVALID_OFFSET;
 }
@@ -60,7 +60,12 @@ off_t offset_load(int fd) {
 存储B+相关数据
 */
 ssize_t offset_store(int fd, off_t offset) {
-    char buf[ADDR_STR_WIDTH];
+    char buf[ADDR_STR_WIDTH]={0};
     hex_to_str(offset, buf, sizeof(buf));
     return write(fd, buf, sizeof(buf));
+}
+ssize_t boot_filesize_store(int fd, off_t filesize) {
+    char buf[ADDR_STR_WIDTH]={0};
+    hex_to_str(filesize, buf, sizeof(buf));
+    return pwrite(fd, buf, sizeof(buf), 0);
 }

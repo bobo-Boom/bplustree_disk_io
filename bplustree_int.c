@@ -30,6 +30,7 @@ static int _max_order;
 static inline int is_leaf(struct bplus_node *node) {
     return node->type == BPLUS_TREE_LEAF;
 }
+
 /*
 键值二分查找
 */
@@ -1189,7 +1190,7 @@ static int leaf_remove(struct bplus_tree *tree, struct bplus_node *leaf, key_t k
 /*
 删除节点
 */
-static int bplus_tree_delete(struct bplus_tree *tree, key_t key) {
+int bplus_tree_delete(struct bplus_tree *tree, key_t key) {
     struct bplus_node *node = node_seek(tree, tree->root);
     while (node != NULL) {
         /*叶子节点，直接进行删除操作*/
@@ -1275,7 +1276,7 @@ long *bplus_tree_get_range(struct bplus_tree *tree, key_t key1, key_t key2, int 
     int count = 0;
 
     count = get_range_amount(tree, key1, key2);
-    *amount=count;
+    *amount = count;
     if (count == 0) {
         return NULL;
     }
@@ -1422,7 +1423,7 @@ int get_less_amount(struct bplus_tree *tree, key_t key) {
                     if (node == NULL) {
                         break;
                     }
-                    i = node->children-1;
+                    i = node->children - 1;
                 }
             }
             break;
@@ -1454,7 +1455,7 @@ long *bplus_tree_less_than(struct bplus_tree *tree, key_t key, int *amount) {
 
     struct bplus_node *node = node_seek(tree, tree->root);
     while (node != NULL) {
-        int i = key_binary_search(node, max );
+        int i = key_binary_search(node, max);
         if (is_leaf(node)) {
             if (i < 0) {
                 i = -i - 1;
@@ -1471,7 +1472,7 @@ long *bplus_tree_less_than(struct bplus_tree *tree, key_t key, int *amount) {
                     if (node == NULL) {
                         break;
                     }
-                    i = node->children-1;
+                    i = node->children - 1;
                 }
             }
             break;
@@ -1495,7 +1496,7 @@ char *filename----------文件名
 int block_size----------文件大小？节点大小block size（默认4KB）
 返回--------------------B+树头节点结构体指针
 */
-struct bplus_tree *bplus_tree_init(char *filename, int block_size) {
+struct bplus_tree *bplus_tree_init(char *filename, int block_size, off_t tree_id) {
     int i;
     struct bplus_node node;
 
@@ -1544,7 +1545,10 @@ struct bplus_tree *bplus_tree_init(char *filename, int block_size) {
     */
     int fd = open(strcat(tree->filename, ".boot"), O_RDWR, 0644);
     if (fd >= 0) {
+        offset_load(fd);
         tree->root = offset_load(fd);
+        tree->tree_id = offset_load(fd);
+        tree->key_type = offset_load(fd);
         _block_size = offset_load(fd);
         tree->file_size = offset_load(fd);
 
@@ -1560,6 +1564,11 @@ struct bplus_tree *bplus_tree_init(char *filename, int block_size) {
         tree->root = INVALID_OFFSET;
         _block_size = block_size;
         tree->file_size = 0;
+        char name[16]={0};
+        char name_temp[16]={0};
+
+        tree->tree_id = tree_id;
+        tree->key_type = 0;
     }
 
     /*设置节点内关键字和数据最大个数,如果是256都是18*/
@@ -1583,11 +1592,22 @@ B+树的关闭操作
 */
 void bplus_tree_deinit(struct bplus_tree *tree) {
     /*向.boot写入B+树的3个配置数据*/
+    off_t boot_file_size = 6 * ADDR_STR_WIDTH;
     int fd = open(tree->filename, O_CREAT | O_RDWR, 0644);
     assert(fd >= 0);
+    //boot file size
+    assert(offset_store(fd, boot_file_size) == ADDR_STR_WIDTH);
+    //tree root
     assert(offset_store(fd, tree->root) == ADDR_STR_WIDTH);
+    //tree name
+    assert(offset_store(fd, tree->tree_id) == ADDR_STR_WIDTH);
+    //tree key type
+    assert(offset_store(fd, tree->key_type) == ADDR_STR_WIDTH);
+    //tree blocksize
     assert(offset_store(fd, _block_size) == ADDR_STR_WIDTH);
+    //tree tree file size
     assert(offset_store(fd, tree->file_size) == ADDR_STR_WIDTH);
+
 
     /*将空闲块存储在文件中以备将来重用*/
     struct list_head *pos, *n;
@@ -1595,8 +1615,10 @@ void bplus_tree_deinit(struct bplus_tree *tree) {
         list_del(pos);
         struct free_block *block = list_entry(pos, struct free_block, link);
         assert(offset_store(fd, block->offset) == ADDR_STR_WIDTH);
+        boot_file_size+=ADDR_STR_WIDTH;
         free(block);
     }
+    boot_filesize_store(fd, boot_file_size);
 
     bplus_close(tree->fd);
     free(tree->caches);

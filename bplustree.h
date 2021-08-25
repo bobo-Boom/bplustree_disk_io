@@ -192,6 +192,8 @@ typedef struct bplus_tree {
     char filename[1024];
     int fd;
     int level;
+    off_t tree_id;
+    off_t key_type;
     off_t root;
     off_t file_size;
     struct list_head free_blocks;
@@ -223,7 +225,9 @@ long *bplus_tree_get_more_than(struct bplus_tree *tree, key_t key, int *amount);
 
 long *bplus_tree_less_than(struct bplus_tree *tree, key_t key, int *amount);
 
-struct bplus_tree *bplus_tree_init(char *filename, int block_size);
+struct bplus_tree *bplus_tree_init(char *filename, int block_size, off_t tree_id);
+
+int bplus_tree_delete(struct bplus_tree *tree, key_t key);
 
 void bplus_tree_deinit(struct bplus_tree *tree);
 
@@ -241,6 +245,8 @@ void hex_to_str(off_t offset, char *buf, int len);
 off_t offset_load(int fd);
 
 ssize_t offset_store(int fd, off_t offset);
+
+ssize_t boot_filesize_store(int fd, off_t filesize);
 
 /*_BPLUS_TREE_H*/
 #endif  
