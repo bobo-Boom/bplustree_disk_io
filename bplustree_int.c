@@ -1564,9 +1564,6 @@ struct bplus_tree *bplus_tree_init(char *filename, int block_size, off_t tree_id
         tree->root = INVALID_OFFSET;
         _block_size = block_size;
         tree->file_size = 0;
-        char name[16]={0};
-        char name_temp[16]={0};
-
         tree->tree_id = tree_id;
         tree->key_type = 0;
     }
@@ -1591,7 +1588,7 @@ B+树的关闭操作
 打开.boot文件
 */
 void bplus_tree_deinit(struct bplus_tree *tree) {
-    /*向.boot写入B+树的3个配置数据*/
+    /*向.boot写入B+树的配置数据*/
     off_t boot_file_size = 6 * ADDR_STR_WIDTH;
     int fd = open(tree->filename, O_CREAT | O_RDWR, 0644);
     assert(fd >= 0);

@@ -208,7 +208,7 @@ int bplus_tree_put_str(struct bplus_tree *tree, key_t_arr key, long data);
 
 long bplus_tree_get_range_str(struct bplus_tree *tree, key_t_arr key1, key_t_arr key2);
 
-struct bplus_tree *bplus_tree_init_str(char *filename, int block_size);
+struct bplus_tree *bplus_tree_init_str(char *filename, int block_size, off_t tree_id);
 
 void bplus_tree_deinit_str(struct bplus_tree *tree);
 

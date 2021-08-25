@@ -273,7 +273,7 @@ int index------------------------------插入位置
 struct bplus_node *sub_node------------要插入的分支
 */
 static inline void sub_node_update_str(struct bplus_tree *tree, struct bplus_node *parent,
-                                   int index, struct bplus_node *sub_node) {
+                                       int index, struct bplus_node *sub_node) {
     assert(sub_node->self != INVALID_OFFSET);
     sub_arr(parent)[index] = sub_node->self;
     sub_node->parent = parent->self;
@@ -918,7 +918,8 @@ struct bplus_node *r_sib------------------右兄弟
 struct bplus_node *parent-----------------父节点
 int i-------------------------------------键值在父节点中的位置
 */
-static inline int sibling_select_str(struct bplus_node *l_sib, struct bplus_node *r_sib, struct bplus_node *parent, int i) {
+static inline int
+sibling_select_str(struct bplus_node *l_sib, struct bplus_node *r_sib, struct bplus_node *parent, int i) {
     if (i == -1) {
         /*没有左兄弟，选择右兄弟合并*/
         return RIGHT_SIBLING;
@@ -935,7 +936,7 @@ static inline int sibling_select_str(struct bplus_node *l_sib, struct bplus_node
 非叶子节点从左兄弟拿一个值
 */
 static void non_leaf_shift_from_left_str(struct bplus_tree *tree, struct bplus_node *node, struct bplus_node *left,
-                                     struct bplus_node *parent, int parent_key_index, int remove) {
+                                         struct bplus_node *parent, int parent_key_index, int remove) {
     memmove(key_arr(node)[1], key_arr(node)[0], remove * sizeof(key_t_arr));
     memmove(&sub_arr(node)[1], &sub_arr(node)[0], (remove + 1) * sizeof(off_t));
 
@@ -956,7 +957,7 @@ static void non_leaf_shift_from_left_str(struct bplus_tree *tree, struct bplus_n
 非叶子节点合并到左兄弟
 */
 static void non_leaf_merge_into_left_str(struct bplus_tree *tree, struct bplus_node *node, struct bplus_node *left,
-                                     struct bplus_node *parent, int parent_key_index, int remove) {
+                                         struct bplus_node *parent, int parent_key_index, int remove) {
     /*键值下移*/
     //key_arr(left)[left->children - 1] = key_arr(parent)[parent_key_index];
     //todo
@@ -982,7 +983,7 @@ static void non_leaf_merge_into_left_str(struct bplus_tree *tree, struct bplus_n
 非叶子节点从右兄弟拿一个值
 */
 static void non_leaf_shift_from_right_str(struct bplus_tree *tree, struct bplus_node *node, struct bplus_node *right,
-                                      struct bplus_node *parent, int parent_key_index) {
+                                          struct bplus_node *parent, int parent_key_index) {
     //key_arr(node)[node->children - 1] = key_arr(parent)[parent_key_index];
     //todo
     memcpy(key_arr(node)[node->children - 1], key_arr(parent)[parent_key_index], sizeof(key_t_arr));
@@ -1004,7 +1005,7 @@ static void non_leaf_shift_from_right_str(struct bplus_tree *tree, struct bplus_
 非叶子节点合并到右兄弟
 */
 static void non_leaf_merge_from_right_str(struct bplus_tree *tree, struct bplus_node *node, struct bplus_node *right,
-                                      struct bplus_node *parent, int parent_key_index) {
+                                          struct bplus_node *parent, int parent_key_index) {
     //key_arr(node)[node->children - 1] = key_arr(parent)[parent_key_index];
     //todo
     memcpy(key_arr(node)[node->children - 1], key_arr(parent)[parent_key_index], sizeof(key_t_arr));
@@ -1117,7 +1118,7 @@ int parent_key_index---------------------leaf在父节点的位置
 int remove-------------------------------删除的数据在leaf的位置
 */
 static void leaf_shift_from_left_str(struct bplus_tree *tree, struct bplus_node *leaf, struct bplus_node *left,
-                                 struct bplus_node *parent, int parent_key_index, int remove) {
+                                     struct bplus_node *parent, int parent_key_index, int remove) {
     /*腾出第一个位置*/
     memmove(key_arr(leaf)[1], key_arr(leaf)[0], remove * sizeof(key_t_arr));
     memmove(&data_arr(leaf)[1], &data_arr(leaf)[0], remove * sizeof(off_t));
@@ -1139,8 +1140,9 @@ static void leaf_shift_from_left_str(struct bplus_tree *tree, struct bplus_node 
 左兄弟数据未过半，两两合并
 */
 static void
-leaf_merge_into_left_str(struct bplus_tree *tree, struct bplus_node *leaf, struct bplus_node *left, int parent_key_index,
-                     int remove) {
+leaf_merge_into_left_str(struct bplus_tree *tree, struct bplus_node *leaf, struct bplus_node *left,
+                         int parent_key_index,
+                         int remove) {
     /*将key和data从leaf复制到left，不包括被删除的数据*/
     memmove(key_arr(left)[left->children], key_arr(leaf)[0], remove * sizeof(key_t_arr));
     memmove(&data_arr(left)[left->children], &data_arr(leaf)[0], remove * sizeof(off_t));
@@ -1161,7 +1163,7 @@ int parent_key_index---------------------leaf在父节点的位置
 int remove-------------------------------删除的数据在leaf的位置
 */
 static void leaf_shift_from_right_str(struct bplus_tree *tree, struct bplus_node *leaf, struct bplus_node *right,
-                                  struct bplus_node *parent, int parent_key_index) {
+                                      struct bplus_node *parent, int parent_key_index) {
     /*leaf最后一个位置放right第一个数据*/
     //key_arr(leaf)[leaf->children] = key_arr(right)[0];
     //todo
@@ -1183,7 +1185,8 @@ static void leaf_shift_from_right_str(struct bplus_tree *tree, struct bplus_node
 /*
 左兄弟数据未过半，两两合并
 */
-static inline void leaf_merge_from_right_str(struct bplus_tree *tree, struct bplus_node *leaf, struct bplus_node *right) {
+static inline void
+leaf_merge_from_right_str(struct bplus_tree *tree, struct bplus_node *leaf, struct bplus_node *right) {
     memmove(key_arr(leaf)[leaf->children], key_arr(right)[0], right->children * sizeof(key_t_arr));
     memmove(&data_arr(leaf)[leaf->children], &data_arr(right)[0], right->children * sizeof(off_t));
     leaf->children += right->children;
@@ -1395,7 +1398,7 @@ char *filename----------文件名
 int block_size----------文件大小
 返回--------------------B+树头节点结构体指针
 */
-struct bplus_tree *bplus_tree_init_str(char *filename, int block_size) {
+struct bplus_tree *bplus_tree_init_str(char *filename, int block_size, off_t tree_id) {
     int i;
     struct bplus_node node;
 
@@ -1444,7 +1447,10 @@ struct bplus_tree *bplus_tree_init_str(char *filename, int block_size) {
     */
     int fd = open(strcat(tree->filename, ".boot"), O_RDWR, 0644);
     if (fd >= 0) {
+        offset_load(fd);
         tree->root = offset_load(fd);
+        tree->tree_id = offset_load(fd);
+        tree->key_type = offset_load(fd);
         _block_size_arr = offset_load(fd);
         tree->file_size = offset_load(fd);
 
@@ -1460,6 +1466,8 @@ struct bplus_tree *bplus_tree_init_str(char *filename, int block_size) {
         tree->root = INVALID_OFFSET;
         _block_size_arr = block_size;
         tree->file_size = 0;
+        tree->tree_id = tree_id;
+        tree->key_type = 0;
     }
 
     /*设置节点内关键字和数据最大个数*/
@@ -1481,13 +1489,22 @@ struct bplus_tree *bplus_tree_init_str(char *filename, int block_size) {
 B+树的关闭操作
 打开.boot文件
 */
-//todo
 void bplus_tree_deinit_str(struct bplus_tree *tree) {
-    /*向.boot写入B+树的3个配置数据*/
+    off_t boot_file_size = 6 * ADDR_STR_WIDTH;
+    /*向.boot写入B+树的配置数据*/
     int fd = open(tree->filename, O_CREAT | O_RDWR, 0644);
     assert(fd >= 0);
+    //boot file size
+    assert(offset_store(fd, boot_file_size) == ADDR_STR_WIDTH);
+    //tree root
     assert(offset_store(fd, tree->root) == ADDR_STR_WIDTH);
+    //tree name
+    assert(offset_store(fd, tree->tree_id) == ADDR_STR_WIDTH);
+    //tree key type
+    assert(offset_store(fd, tree->key_type) == ADDR_STR_WIDTH);
+    //tree blocksize
     assert(offset_store(fd, _block_size_arr) == ADDR_STR_WIDTH);
+    //tree tree file size
     assert(offset_store(fd, tree->file_size) == ADDR_STR_WIDTH);
 
     /*将空闲块存储在文件中以备将来重用*/
@@ -1496,8 +1513,10 @@ void bplus_tree_deinit_str(struct bplus_tree *tree) {
         list_del(pos);
         struct free_block *block = list_entry(pos, struct free_block, link);
         assert(offset_store(fd, block->offset) == ADDR_STR_WIDTH);
+        boot_file_size += ADDR_STR_WIDTH;
         free(block);
     }
+    boot_filesize_store(fd, boot_file_size);
 
     bplus_close(tree->fd);
     free(tree->caches);
