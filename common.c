@@ -6,6 +6,7 @@
 int is_leaf(struct bplus_node *node) {
     return node->type == BPLUS_TREE_LEAF;
 }
+
 /*
 字符串转16进制
 */
@@ -59,12 +60,45 @@ void offset_store(char *t_ptr, off_t offset) {
     //todo
     memcpy(t_ptr + offset, buf, sizeof(buf));
 }
+
 /*
 获取B+树文件大小
 */
 
-off_t get_tree_size(char *tree_boot_addr){
-    off_t offset=3*ADDR_STR_WIDTH;
-    offset=offset_load(tree_boot_addr,&offset);
+off_t get_tree_size(char *tree_boot_addr) {
+    off_t offset = 5 * ADDR_STR_WIDTH;
+    offset = offset_load(tree_boot_addr, &offset);
     return offset;
+}
+
+off_t get_boot_size(char *tree_boot_addr) {
+    off_t offset = 0;
+    offset = offset_load(tree_boot_addr, &offset);
+    return offset;
+}
+
+
+int get_file_size(char *filename) {
+    struct stat temp;
+    stat(filename, &temp);
+    return temp.st_size;
+}
+
+
+char *mmap_btree_file(char *file_name) {
+
+    int fd, file_size;
+    char *p_map;
+
+    file_size = get_file_size(file_name);
+    fd = open(file_name, O_RDWR, 0644);
+
+    p_map = (char *) mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
+    close(fd);
+    return p_map;
+
+};
+
+void munmap_btree_file(char *m_ptr, off_t file_size) {
+    munmap(m_ptr, file_size);
 }

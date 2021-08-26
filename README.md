@@ -1,40 +1,10 @@
-# 基于B+树的磁盘索引
+# 基于B+树的内存索引
 
-支持查找、插入、删除、可视化，支持范围操作
-
+支持加载、查询、范围操作
 
 
 两个存储文件：index存储数据，boot存储B+树的信息
 
-
-
-设置.index位置和命名，用于存放数据
-
-```
-Set data index file name (e.g. /tmp/data.index):
-```
-
-设置_block_size，用于存放B+树节点在内存中的缓存
-
-```
-Set index file block size (bytes, power of 2, e.g. 4096): 
-```
-
-输入命令
-
-```
-Please input command (Type 'h' for help):
-```
-
-帮助文档，插入、删除、查找、可视化、退出
-
-```
-i: Insert key. e.g. i 1 4-7 9
-r: Remove key. e.g. r 1-100
-s: Search by key. e.g. s 41-60
-d: Dump the tree structure.
-q: quit.
-```
 
 编译
 
@@ -63,3 +33,10 @@ demo
 bplustree_demo.c
 ```
 
+迭代说明
+
+```
+更改 boot file 配置信息结构。
+
+BootFileSize|TreeRoot|TreeId|KyeType|BlockSize|TreeFileSize
+```

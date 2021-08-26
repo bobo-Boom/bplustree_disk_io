@@ -25,7 +25,6 @@ static int _max_entries;
 static int _max_order;
 
 
-
 /*
 键值二分查找
 */
@@ -165,7 +164,6 @@ static long bplus_tree_search(struct bplus_tree *tree, key_t key) {
 long bplus_tree_get(struct bplus_tree *tree, key_t key) {
     return bplus_tree_search(tree, key);
 }
-
 
 
 int get_range_amount(struct bplus_tree *tree, key_t key1, key_t key2) {
@@ -434,6 +432,7 @@ struct bplus_tree *bplus_tree_load(char *tree_addr, char *tree_boot_addr, int bl
     off_t boot_file_off_t = 0;
     off_t boot_file_size = 0;
     struct bplus_node node;
+
     /*节点大小不是2的平方*/
     if ((block_size & (block_size - 1)) != 0) {
         //printf todo
@@ -470,13 +469,24 @@ struct bplus_tree *bplus_tree_load(char *tree_addr, char *tree_boot_addr, int bl
     if (tree_boot_addr == NULL) {
         return NULL;
     }
+    //boot file size
+    boot_file_size = offset_load(tree_boot_addr, &boot_file_off_t);
+    //tree root
     tree->root = offset_load(tree_boot_addr, &boot_file_off_t);
+    //tree id
+    off_t tree_id = offset_load(tree_boot_addr, &boot_file_off_t);
+    tree->tree_id = tree_id;
+    //key type
+    off_t tree_type = offset_load(tree_boot_addr, &boot_file_off_t);
+    tree_type = tree_type;
+    //block size
     _block_size = offset_load(tree_boot_addr, &boot_file_off_t);
+    //tree size
     tree->file_size = offset_load(tree_boot_addr, &boot_file_off_t);
+
     tree->fd = tree_addr;
 
-    //todo  bootfilesize
-    /*加载freeblocks空闲数据块*/
+
     while (boot_file_off_t < boot_file_size) {
         offset_load(tree_boot_addr, &boot_file_off_t);
         struct free_block *block = malloc(sizeof(*block));
@@ -499,14 +509,14 @@ struct bplus_tree *bplus_tree_load(char *tree_addr, char *tree_boot_addr, int bl
 
 /*
 B+树的关闭操作
-打开.boot文件
+清空内存
 */
 void bplus_tree_deinit(struct bplus_tree *tree, char *tree_addr, char *tree_boot_addr) {
 
-    int len=get_tree_size(tree_addr);
-    bzero(tree->fd,len);
-    //todo boot file size的获取
-    //bzero(tree_boot_addr,);
+    int len = get_tree_size(tree_addr);
+    bzero(tree->fd, len);
+    off_t file_size = get_boot_size(tree_boot_addr);
+    bzero(tree_boot_addr, file_size);
     free(tree->caches);
     free(tree);
 }

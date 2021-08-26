@@ -10,6 +10,7 @@
 #include<unistd.h>
 #include<sys/types.h>
 #include<sys/stat.h>
+#include<sys/mman.h>
 /*
 最少缓冲数目，我们最多需要5个节点的缓冲足矣
 节点自身，左兄弟节点，右兄弟节点，兄弟的兄弟节点，父节点
@@ -190,9 +191,10 @@ typedef struct bplus_tree {
     char *caches;
     int used[MIN_CACHE_NUM];
     char filename[1024];
-    //int fd;
     char *fd;
     int level;
+    off_t tree_id;
+    off_t key_type;
     off_t root;
     off_t file_size;
     struct list_head free_blocks;
@@ -241,6 +243,14 @@ void offset_store(char* fd, off_t offset);
 off_t get_tree_size(char *tree_boot_addr);
 
 int is_leaf(struct bplus_node *node);
+
+off_t get_boot_size(char *tree_boot_addr);
+
+int get_file_size(char *filename);
+
+char *mmap_btree_file(char *file_name);
+
+void munmap_btree_file(char *m_ptr, off_t file_size);
 
 /*_BPLUS_TREE_H*/
 #endif  

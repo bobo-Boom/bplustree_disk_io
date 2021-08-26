@@ -98,7 +98,6 @@ static struct bplus_node *node_new_str(struct bplus_tree *tree) {
 }
 
 
-
 /*
 根据偏移量从.index获取节点的全部信息，加载到缓冲区
 偏移量非法则返回NULL
@@ -135,7 +134,6 @@ static struct bplus_node *node_seek_str(struct bplus_tree *tree, off_t offset) {
 }
 
 
-
 /*
 B+树查找
 */
@@ -170,7 +168,6 @@ static long bplus_tree_search_str(struct bplus_tree *tree, key_t_arr key) {
 long bplus_tree_get_str(struct bplus_tree *tree, key_t_arr key) {
     return bplus_tree_search_str(tree, key);
 }
-
 
 
 /*
@@ -262,12 +259,24 @@ struct bplus_tree *bplus_tree_load_str(char *tree_addr, char *tree_boot_addr, in
     if (tree_boot_addr == NULL) {
         return NULL;
     }
+    //boot file size
+    boot_file_size = offset_load(tree_boot_addr, &boot_file_off_t);
+    //tree root
     tree->root = offset_load(tree_boot_addr, &boot_file_off_t);
+    //tree id
+    off_t tree_id = offset_load(tree_boot_addr, &boot_file_off_t);
+    tree->tree_id = tree_id;
+    //key type
+    off_t tree_type = offset_load(tree_boot_addr, &boot_file_off_t);
+    tree_type = tree_type;
+    //block size
     _block_size_arr = offset_load(tree_boot_addr, &boot_file_off_t);
+    //tree size
     tree->file_size = offset_load(tree_boot_addr, &boot_file_off_t);
+
     tree->fd = tree_addr;
 
-    //todo  bootfilesize
+
     /*加载freeblocks空闲数据块*/
     while (boot_file_off_t < boot_file_size) {
         offset_load(tree_boot_addr, &boot_file_off_t);
@@ -280,7 +289,8 @@ struct bplus_tree *bplus_tree_load_str(char *tree_addr, char *tree_boot_addr, in
     _max_order_arr = (_block_size_arr - sizeof(node)) / (sizeof(key_t_arr) + sizeof(off_t));
     _max_entries_arr = (_block_size_arr - sizeof(node)) / (sizeof(key_t_arr) + sizeof(long));
     // printf todo
-    printf("config node order:%d and leaf entries:%d and _block_size:%d ,sizeof key_t:%lu\n", _max_order_arr, _max_entries_arr,
+    printf("config node order:%d and leaf entries:%d and _block_size:%d ,sizeof key_t:%lu\n", _max_order_arr,
+           _max_entries_arr,
            _block_size_arr, sizeof(key_t_arr));
 
     /*申请和初始化节点缓存*/
@@ -291,15 +301,14 @@ struct bplus_tree *bplus_tree_load_str(char *tree_addr, char *tree_boot_addr, in
 
 /*
 B+树的关闭操作
-打开.boot文件
+清空内存
 */
-//todo
 void bplus_tree_deinit_str(struct bplus_tree *tree, char *tree_addr, char *tree_boot_addr) {
 
-    int len=get_tree_size(tree_addr);
-    bzero(tree->fd,len);
-    //todo boot file size的获取
-    //bzero(tree_boot_addr,);
+    int len = get_tree_size(tree_boot_addr);
+    bzero(tree->fd, len);
+    off_t file_size = get_boot_size(tree_boot_addr);
+    bzero(tree_boot_addr, file_size);
     free(tree->caches);
     free(tree);
 }
