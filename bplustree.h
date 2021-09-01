@@ -8,7 +8,6 @@
 #include<fcntl.h>
 #include<ctype.h>
 #include<unistd.h>
-#include<sys/types.h>
 #include<sys/stat.h>
 #include<sys/mman.h>
 /*
@@ -46,9 +45,25 @@ enum {
     RIGHT_SIBLING = 1,
 };
 
+/*
+关键字key类型
+*/
+enum {
+    INT_TREE_TYPE,
+    STRING_TREE_TYPE = 1,
+};
+
+
 /*16位数据宽度*/
 #define ADDR_STR_WIDTH 16
 
+/*tree boot 配置文件偏移量*/
+#define BOOT_FILE_SIZE_OFF 0*ADDR_STR_WIDTH
+#define TREE_ROOT_OFF 1*ADDR_STR_WIDTH
+#define TREE_ID_OFF 2*ADDR_STR_WIDTH
+#define TREE_TYPE_OFF  3*ADDR_STR_WIDTH
+#define BLOCK_SIZE_OFF 4*ADDR_STR_WIDTH
+#define TREE_FILE_SIZE_OFF 5*ADDR_STR_WIDTH
 
 
 /*得到struct bplus_tree内free_blocks的偏移量*/
@@ -213,6 +228,7 @@ void bplus_tree_deinit_str(struct bplus_tree *tree, char *tree_addr, char *tree_
 
 struct bplus_tree *bplus_tree_load_str(char *tree_addr, char *tree_boot_addr, int block_size);
 
+
 /*
 关键字key为int的操作方法
 */
@@ -236,21 +252,38 @@ off_t str_to_hex(char *c, int len);
 
 void hex_to_str(off_t offset, char *buf, int len);
 
-off_t offset_load(char *t_ptr, off_t *offset);
 
-void offset_store(char* fd, off_t offset);
+off_t offset_load(char *t_ptr, off_t offset);
 
-off_t get_tree_size(char *tree_boot_addr);
+void offset_store(char *fd, off_t offset);
 
-int is_leaf(struct bplus_node *node);
-
-off_t get_boot_size(char *tree_boot_addr);
 
 int get_file_size(char *filename);
 
 char *mmap_btree_file(char *file_name);
 
 void munmap_btree_file(char *m_ptr, off_t file_size);
+
+
+struct bplus_tree *get_tree(char *tree_boot_addr);
+/**/
+int is_leaf(struct bplus_node *node);
+
+/*
+ 获取tree配置信息
+ BootFileSize|TreeRoot|TreeId|KyeType|BlockSize|TreeFileSize
+ */
+off_t get_boot_size(char *tree_boot_addr);
+
+off_t get_tree_root(char *tree_boot_addr);
+
+off_t get_tree_id(char *tree_boot_addr);
+
+off_t get_tree_type(char *tree_boot_addr);
+
+off_t get_tree_block_size(char *tree_boot_addr);
+
+off_t get_tree_size(char *tree_boot_addr);
 
 /*_BPLUS_TREE_H*/
 #endif  

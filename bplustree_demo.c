@@ -30,8 +30,8 @@ int main(void) {
     //bplus_tree_deinit_str(tree,tree_ptr,boot_ptr);
 
     //int tree
-    char *boot_ptr1 = mmap_btree_file("./data_int.index.boot");
-    char *tree_ptr1 = mmap_btree_file("./data_int.index");
+    char *boot_ptr1 = mmap_btree_file("./data.index.boot");
+    char *tree_ptr1 = mmap_btree_file("./data.index");
 
     struct bplus_tree *tree1 = bplus_tree_load(tree_ptr1, boot_ptr1, 4096);
 

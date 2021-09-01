@@ -260,30 +260,32 @@ struct bplus_tree *bplus_tree_load_str(char *tree_addr, char *tree_boot_addr, in
         return NULL;
     }
     //boot file size
-    boot_file_size = offset_load(tree_boot_addr, &boot_file_off_t);
+    boot_file_size = get_boot_size(tree_boot_addr);
     //tree root
-    tree->root = offset_load(tree_boot_addr, &boot_file_off_t);
+    tree->root = get_tree_root(tree_boot_addr);
     //tree id
-    off_t tree_id = offset_load(tree_boot_addr, &boot_file_off_t);
+    off_t tree_id = get_tree_id(tree_boot_addr);
     tree->tree_id = tree_id;
     //key type
-    off_t tree_type = offset_load(tree_boot_addr, &boot_file_off_t);
+    off_t tree_type = get_tree_type(tree_boot_addr);
     tree_type = tree_type;
     //block size
-    _block_size_arr = offset_load(tree_boot_addr, &boot_file_off_t);
+    _block_size_arr = get_boot_size(tree_boot_addr);
     //tree size
-    tree->file_size = offset_load(tree_boot_addr, &boot_file_off_t);
+    tree->file_size = get_tree_size(tree_boot_addr);
 
     tree->fd = tree_addr;
 
 
     /*加载freeblocks空闲数据块*/
+    boot_file_off_t = 6 * ADDR_STR_WIDTH;
     while (boot_file_off_t < boot_file_size) {
-        offset_load(tree_boot_addr, &boot_file_off_t);
+        i = offset_load(tree_boot_addr, boot_file_off_t);
         struct free_block *block = malloc(sizeof(*block));
         assert(block != NULL);
         block->offset = i;
         list_add(&block->link, &tree->free_blocks);
+        boot_file_off_t += ADDR_STR_WIDTH;
     }
     /*设置节点内关键字和数据最大个数,如果是256都是18*/
     _max_order_arr = (_block_size_arr - sizeof(node)) / (sizeof(key_t_arr) + sizeof(off_t));

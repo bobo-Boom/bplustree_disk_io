@@ -37,6 +37,6 @@ bplustree_demo.c
 
 ```
 更改 boot file 配置信息结构。
-
+对应分支 ：  v1.3.1_hard_dev
 BootFileSize|TreeRoot|TreeId|KyeType|BlockSize|TreeFileSize
 ```

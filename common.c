@@ -42,10 +42,9 @@ void hex_to_str(off_t offset, char *buf, int len) {
 加载文件数据，每16位记录一个信息
 */
 //where used
-off_t offset_load(char *t_ptr, off_t *offset) {
+off_t offset_load(char *t_ptr, off_t offset) {
     char buf[ADDR_STR_WIDTH];
-    char *p = memcpy(buf, t_ptr + *offset, sizeof(buf));
-    *offset = *offset + ADDR_STR_WIDTH;
+    char *p = memcpy(buf, t_ptr + offset, sizeof(buf));
     return p != NULL ? str_to_hex(buf, sizeof(buf)) : INVALID_OFFSET;
 }
 
@@ -61,19 +60,45 @@ void offset_store(char *t_ptr, off_t offset) {
     memcpy(t_ptr + offset, buf, sizeof(buf));
 }
 
-/*
-获取B+树文件大小
-*/
+/***
+ * 获取tree配置信息
+ * @param tree_boot_addr
+ * @return off_t
+ */
 
-off_t get_tree_size(char *tree_boot_addr) {
-    off_t offset = 5 * ADDR_STR_WIDTH;
-    offset = offset_load(tree_boot_addr, &offset);
+off_t get_boot_size(char *tree_boot_addr) {
+
+    off_t offset = offset_load(tree_boot_addr, BOOT_FILE_SIZE_OFF);
     return offset;
 }
 
-off_t get_boot_size(char *tree_boot_addr) {
-    off_t offset = 0;
-    offset = offset_load(tree_boot_addr, &offset);
+off_t get_tree_root(char *tree_boot_addr) {
+
+    off_t offset = offset_load(tree_boot_addr, TREE_ROOT_OFF);
+    return offset;
+}
+
+off_t get_tree_id(char *tree_boot_addr) {
+
+    off_t offset = offset_load(tree_boot_addr, TREE_ID_OFF);
+    return offset;
+}
+
+off_t get_tree_type(char *tree_boot_addr) {
+
+    off_t offset = offset_load(tree_boot_addr, TREE_TYPE_OFF);
+    return offset;
+}
+
+off_t get_tree_block_size(char *tree_boot_addr) {
+
+    off_t offset = offset_load(tree_boot_addr, BLOCK_SIZE_OFF);
+    return offset;
+}
+
+off_t get_tree_size(char *tree_boot_addr) {
+
+    off_t offset = offset_load(tree_boot_addr, TREE_FILE_SIZE_OFF);
     return offset;
 }
 
@@ -101,4 +126,36 @@ char *mmap_btree_file(char *file_name) {
 
 void munmap_btree_file(char *m_ptr, off_t file_size) {
     munmap(m_ptr, file_size);
+}
+
+
+struct bplus_tree *get_tree(char *tree_boot_addr) {
+    struct bplus_tree *tree = NULL;
+    off_t tree_off_t = 0;
+    off_t block_size = 0;
+
+    int type = get_tree_type(tree_boot_addr);
+    printf("type is %d\n",type);
+
+    switch (type) {
+        case INT_TREE_TYPE:
+            tree_off_t = get_boot_size(tree_boot_addr);
+            printf("tree_off_t is %lld\n",tree_off_t);
+            block_size = get_tree_block_size(tree_boot_addr);
+            printf("block_size is %lld\n",block_size);
+            tree = bplus_tree_load(tree_boot_addr + tree_off_t, tree_boot_addr, block_size);
+
+            break;
+        case STRING_TREE_TYPE:
+            tree_off_t = get_boot_size(tree_boot_addr);
+            printf("tree_off_t is %lld\n",tree_off_t);
+            block_size = get_tree_block_size(tree_boot_addr);
+            printf("block_size is %lld\n",block_size);
+            char* tree_addr=tree_boot_addr+tree_off_t;
+            tree = bplus_tree_load_str(tree_boot_addr, tree_boot_addr, block_size);
+            break;
+        default:
+            return NULL;
+    }
+    return tree;
 }
