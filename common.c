@@ -43,7 +43,7 @@ void hex_to_str(off_t offset, char *buf, int len) {
 */
 //where used
 off_t offset_load(char *t_ptr, off_t offset) {
-    char buf[ADDR_STR_WIDTH];
+    char buf[ADDR_STR_WIDTH]={0};
     char *p = memcpy(buf, t_ptr + offset, sizeof(buf));
     return p != NULL ? str_to_hex(buf, sizeof(buf)) : INVALID_OFFSET;
 }
@@ -53,7 +53,7 @@ off_t offset_load(char *t_ptr, off_t offset) {
 */
 //where used
 void offset_store(char *t_ptr, off_t offset) {
-    char buf[ADDR_STR_WIDTH];
+    char buf[ADDR_STR_WIDTH]={0};
     hex_to_str(offset, buf, sizeof(buf));
     //return write(fd, buf, sizeof(buf));
     //todo
@@ -131,28 +131,32 @@ void munmap_btree_file(char *m_ptr, off_t file_size) {
 
 struct bplus_tree *get_tree(char *tree_boot_addr) {
     struct bplus_tree *tree = NULL;
+    char *tree_addr = NULL;
+
     off_t tree_off_t = 0;
     off_t block_size = 0;
 
     int type = get_tree_type(tree_boot_addr);
-    printf("type is %d\n",type);
+    printf("type is %d\n", type);
+    tree_off_t = get_boot_size(tree_boot_addr);
+    tree_addr = tree_boot_addr + tree_off_t;
+    printf("boot addr %p\n",tree_boot_addr);
+    printf("off_t %lld\n tree_addr %p\n",tree_off_t,tree_addr);
 
     switch (type) {
         case INT_TREE_TYPE:
-            tree_off_t = get_boot_size(tree_boot_addr);
-            printf("tree_off_t is %lld\n",tree_off_t);
+            printf("tree_off_t is %lld\n", tree_off_t);
             block_size = get_tree_block_size(tree_boot_addr);
-            printf("block_size is %lld\n",block_size);
-            tree = bplus_tree_load(tree_boot_addr + tree_off_t, tree_boot_addr, block_size);
+            printf("block_size is %lld\n", block_size);
+
+            tree = bplus_tree_load(tree_addr, tree_boot_addr, block_size);
 
             break;
         case STRING_TREE_TYPE:
-            tree_off_t = get_boot_size(tree_boot_addr);
-            printf("tree_off_t is %lld\n",tree_off_t);
+            printf("tree_off_t is %lld\n", tree_off_t);
             block_size = get_tree_block_size(tree_boot_addr);
-            printf("block_size is %lld\n",block_size);
-            char* tree_addr=tree_boot_addr+tree_off_t;
-            tree = bplus_tree_load_str(tree_boot_addr, tree_boot_addr, block_size);
+            printf("block_size is %lld\n", block_size);
+            tree = bplus_tree_load_str(tree_addr, tree_boot_addr, block_size);
             break;
         default:
             return NULL;

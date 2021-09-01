@@ -461,8 +461,8 @@ struct bplus_tree *bplus_tree_load(char *tree_addr, char *tree_boot_addr, int bl
     struct bplus_tree *tree = calloc(1, sizeof(*tree));
     assert(tree != NULL);
     list_init(&tree->free_blocks);
-    strcpy(tree->filename, tree_addr);
-
+   // strcpy(tree->filename, tree_addr);
+    printf("11111111\n");
     /*
     加载boot文件，可读可写
     */
@@ -483,11 +483,12 @@ struct bplus_tree *bplus_tree_load(char *tree_addr, char *tree_boot_addr, int bl
     _block_size = get_tree_block_size(tree_boot_addr);
     //tree size
     tree->file_size = get_tree_size(tree_boot_addr);
-
+    printf("file size %lld\n",tree->file_size);
     tree->fd = tree_addr;
 
     boot_file_off_t = 6 * ADDR_STR_WIDTH;
     while (boot_file_off_t < boot_file_size) {
+        printf("========================\n");
         i = offset_load(tree_boot_addr, boot_file_off_t);
         struct free_block *block = malloc(sizeof(*block));
         assert(block != NULL);

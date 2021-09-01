@@ -270,7 +270,7 @@ struct bplus_tree *bplus_tree_load_str(char *tree_addr, char *tree_boot_addr, in
     off_t tree_type = get_tree_type(tree_boot_addr);
     tree_type = tree_type;
     //block size
-    _block_size_arr = get_boot_size(tree_boot_addr);
+    _block_size_arr = get_tree_block_size(tree_boot_addr);
     //tree size
     tree->file_size = get_tree_size(tree_boot_addr);
 

@@ -1,0 +1,42 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/Users/boom/projects/DB/bplustree_disk_io/bplustree.h
+stdio.h
+-
+stdlib.h
+-
+assert.h
+-
+string.h
+-
+fcntl.h
+-
+ctype.h
+-
+unistd.h
+-
+sys/stat.h
+-
+sys/mman.h
+-
+
+/Users/boom/projects/DB/bplustree_disk_io/bplustree_demo.c
+stdio.h
+-
+stdlib.h
+-
+string.h
+-
+time.h
+-
+math.h
+-
+bplustree.h
+/Users/boom/projects/DB/bplustree_disk_io/bplustree.h
+

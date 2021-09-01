@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="bplustree_disk_io"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="gcc"/>
+		<Option virtualFolders="CMake Files\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="/Users/boom/projects/DB/bplustree_disk_io/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j12 -f &quot;/Users/boom/projects/DB/bplustree_disk_io/cmake-build-debug/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/make -j12 -f &quot;/Users/boom/projects/DB/bplustree_disk_io/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j12 -f &quot;/Users/boom/projects/DB/bplustree_disk_io/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j12 -f &quot;/Users/boom/projects/DB/bplustree_disk_io/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="/Users/boom/projects/DB/bplustree_disk_io/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j12 -f &quot;/Users/boom/projects/DB/bplustree_disk_io/cmake-build-debug/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/usr/bin/make -j12 -f &quot;/Users/boom/projects/DB/bplustree_disk_io/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j12 -f &quot;/Users/boom/projects/DB/bplustree_disk_io/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j12 -f &quot;/Users/boom/projects/DB/bplustree_disk_io/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="/Users/boom/projects/DB/bplustree_disk_io/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j12 -f &quot;/Users/boom/projects/DB/bplustree_disk_io/cmake-build-debug/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/usr/bin/make -j12 -f &quot;/Users/boom/projects/DB/bplustree_disk_io/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j12 -f &quot;/Users/boom/projects/DB/bplustree_disk_io/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j12 -f &quot;/Users/boom/projects/DB/bplustree_disk_io/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="bplustree_disk_io">
+				<Option output="/Users/boom/projects/DB/bplustree_disk_io/cmake-build-debug/bplustree_disk_io" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/Users/boom/projects/DB/bplustree_disk_io/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/Users/boom/projects/DB/bplustree_disk_io/."/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/Library/Developer/CommandLineTools/usr/lib/clang/10.0.1/include"/>
+					<Add directory="/Library/Developer/CommandLineTools/usr/include"/>
+					<Add directory="/System/Library/Frameworks"/>
+					<Add directory="/Library/Frameworks"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j12 -f &quot;/Users/boom/projects/DB/bplustree_disk_io/cmake-build-debug/Makefile&quot;  VERBOSE=1 bplustree_disk_io"/>
+					<CompileFile command="/usr/bin/make -j12 -f &quot;/Users/boom/projects/DB/bplustree_disk_io/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j12 -f &quot;/Users/boom/projects/DB/bplustree_disk_io/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j12 -f &quot;/Users/boom/projects/DB/bplustree_disk_io/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="bplustree_disk_io/fast">
+				<Option output="/Users/boom/projects/DB/bplustree_disk_io/cmake-build-debug/bplustree_disk_io" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/Users/boom/projects/DB/bplustree_disk_io/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/Users/boom/projects/DB/bplustree_disk_io/."/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/Library/Developer/CommandLineTools/usr/lib/clang/10.0.1/include"/>
+					<Add directory="/Library/Developer/CommandLineTools/usr/include"/>
+					<Add directory="/System/Library/Frameworks"/>
+					<Add directory="/Library/Frameworks"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j12 -f &quot;/Users/boom/projects/DB/bplustree_disk_io/cmake-build-debug/Makefile&quot;  VERBOSE=1 bplustree_disk_io/fast"/>
+					<CompileFile command="/usr/bin/make -j12 -f &quot;/Users/boom/projects/DB/bplustree_disk_io/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j12 -f &quot;/Users/boom/projects/DB/bplustree_disk_io/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j12 -f &quot;/Users/boom/projects/DB/bplustree_disk_io/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="/Users/boom/projects/DB/bplustree_disk_io/bplustree.h">
+			<Option target="bplustree_disk_io"/>
+		</Unit>
+		<Unit filename="/Users/boom/projects/DB/bplustree_disk_io/bplustree_demo.c">
+			<Option target="bplustree_disk_io"/>
+		</Unit>
+		<Unit filename="/Users/boom/projects/DB/bplustree_disk_io/bplustree_int.c">
+			<Option target="bplustree_disk_io"/>
+		</Unit>
+		<Unit filename="/Users/boom/projects/DB/bplustree_disk_io/bplustree_str.c">
+			<Option target="bplustree_disk_io"/>
+		</Unit>
+		<Unit filename="/Users/boom/projects/DB/bplustree_disk_io/common.c">
+			<Option target="bplustree_disk_io"/>
+		</Unit>
+		<Unit filename="/Users/boom/projects/DB/bplustree_disk_io/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>
