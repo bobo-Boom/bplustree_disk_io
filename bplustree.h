@@ -87,7 +87,7 @@ enum {
 
 typedef int key_t;
 
-typedef char key_t_arr[128];
+typedef char key_t_arr[64];
 
 /*
 链表头部
