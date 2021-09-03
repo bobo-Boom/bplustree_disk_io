@@ -5,6 +5,18 @@
 #include<math.h>
 #include"bplustree.h"
 
+int test_get_key(void) {
+
+    int tree_id = 1000;
+    long page_index = 4294967295;
+    char string[32] = {0};
+    int len=0;
+
+    get_key(tree_id, page_index, string,&len);
+    printf("%s len is %d\n", string, strlen(string));
+    return 0;
+}
+
 
 int main(void) {
 
@@ -57,7 +69,11 @@ int main(void) {
         printf("%ld\n", rets[i]);
     }
 
-    return 0;
-}
 
+    test_get_key();
+
+    return 0;
+
+
+}
 

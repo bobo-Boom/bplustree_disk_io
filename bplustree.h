@@ -252,6 +252,12 @@ off_t str_to_hex(char *c, int len);
 
 void hex_to_str(off_t offset, char *buf, int len);
 
+char* ltoa(long num,char* str,int radix);
+
+char* itoa(int num,char* str,int radix);
+
+char * get_key(int tree_id,long page_index,char *key ,int * len);
+
 
 off_t offset_load(char *t_ptr, off_t offset);
 
