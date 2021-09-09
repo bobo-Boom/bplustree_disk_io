@@ -85,7 +85,7 @@ enum {
         for (pos = (head)->next, n = pos->next; pos != (head); \
                 pos = n, n = pos->next)
 
-typedef int key_t;
+typedef int key_t_int;
 
 typedef char key_t_arr[64];
 
@@ -232,13 +232,13 @@ struct bplus_tree *bplus_tree_load_str(char *tree_addr, char *tree_boot_addr, in
 /*
 关键字key为int的操作方法
 */
-long bplus_tree_get(struct bplus_tree *tree, key_t key);
+long bplus_tree_get(struct bplus_tree *tree, key_t_int key);
 
-long *bplus_tree_get_range(struct bplus_tree *tree, key_t key1, key_t key2, int *amount);
+long *bplus_tree_get_range(struct bplus_tree *tree, key_t_int key1, key_t_int key2, int *amount);
 
-long *bplus_tree_get_more_than(struct bplus_tree *tree, key_t key, int *amount);
+long *bplus_tree_get_more_than(struct bplus_tree *tree, key_t_int key, int *amount);
 
-long *bplus_tree_less_than(struct bplus_tree *tree, key_t key, int *amount);
+long *bplus_tree_less_than(struct bplus_tree *tree, key_t_int key, int *amount);
 
 void bplus_tree_deinit(struct bplus_tree *tree, char *tree_addr, char *tree_boot_addr);
 

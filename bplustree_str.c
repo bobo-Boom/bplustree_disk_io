@@ -291,7 +291,7 @@ struct bplus_tree *bplus_tree_load_str(char *tree_addr, char *tree_boot_addr, in
     _max_order_arr = (_block_size_arr - sizeof(node)) / (sizeof(key_t_arr) + sizeof(off_t));
     _max_entries_arr = (_block_size_arr - sizeof(node)) / (sizeof(key_t_arr) + sizeof(long));
     // printf todo
-    printf("config node order:%d and leaf entries:%d and _block_size:%d ,sizeof key_t:%lu\n", _max_order_arr,
+    printf("config node order:%d and leaf entries:%d and _block_size:%d ,sizeof key_t_arr:%lu\n", _max_order_arr,
            _max_entries_arr,
            _block_size_arr, sizeof(key_t_arr));
 

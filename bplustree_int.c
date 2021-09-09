@@ -5,14 +5,14 @@
 /*B+树节点node末尾的偏移地址，即key的首地址*/
 #define offset_ptr(node) ((char *) (node) + sizeof(*node))
 
-/*返回B+树节点末尾地址，强制转换为key_t*，即key的指针*/
-#define key(node) ((key_t *)offset_ptr(node))
+/*返回B+树节点末尾地址，强制转换为key_t_int*，即key的指针*/
+#define key(node) ((key_t_int *)offset_ptr(node))
 
 /*返回B+树节点和key末尾地址，强制转换为long*，即data指针*/
-#define data(node) ((long *)(offset_ptr(node) + _max_entries * sizeof(key_t)))
+#define data(node) ((long *)(offset_ptr(node) + _max_entries * sizeof(key_t_int)))
 
 /*返回最后一个key的指针，用于非叶子节点的指向，即第一个ptr*/
-#define sub(node) ((off_t *)(offset_ptr(node) + (_max_order - 1) * sizeof(key_t)))
+#define sub(node) ((off_t *)(offset_ptr(node) + (_max_order - 1) * sizeof(key_t_int)))
 
 /*
 全局静态变量
@@ -28,9 +28,9 @@ static int _max_order;
 /*
 键值二分查找
 */
-static int key_binary_search(struct bplus_node *node, key_t target) {
+static int key_binary_search(struct bplus_node *node, key_t_int target) {
     //Key的首地址
-    key_t *arr = key(node);
+    key_t_int *arr = key(node);
     /*叶子节点：len；非叶子节点：len-1;非叶子节点的key少一个？，用于放ptr*/
     /*len用于定位最后一个key的位置*/
     int len = is_leaf(node) ? node->children : node->children - 1;
@@ -57,7 +57,7 @@ static int key_binary_search(struct bplus_node *node, key_t target) {
 /*
 查找键值在父节点的第几位
 */
-static inline int parent_key_index(struct bplus_node *parent, key_t key) {
+static inline int parent_key_index(struct bplus_node *parent, key_t_int key) {
     int index = key_binary_search(parent, key);
     return index >= 0 ? index : -index - 2;
 }
@@ -134,7 +134,7 @@ static struct bplus_node *node_seek(struct bplus_tree *tree, off_t offset) {
 /*
 B+树查找
 */
-static long bplus_tree_search(struct bplus_tree *tree, key_t key) {
+static long bplus_tree_search(struct bplus_tree *tree, key_t_int key) {
     int ret = -1;
     /*返回根节点的结构体*/
     struct bplus_node *node = node_seek(tree, tree->root);
@@ -161,15 +161,15 @@ static long bplus_tree_search(struct bplus_tree *tree, key_t key) {
 /*
 查找结点的入口
 */
-long bplus_tree_get(struct bplus_tree *tree, key_t key) {
+long bplus_tree_get(struct bplus_tree *tree, key_t_int key) {
     return bplus_tree_search(tree, key);
 }
 
 
-int get_range_amount(struct bplus_tree *tree, key_t key1, key_t key2) {
+int get_range_amount(struct bplus_tree *tree, key_t_int key1, key_t_int key2) {
     long start = -1;
-    key_t min = key1 <= key2 ? key1 : key2;
-    key_t max = min == key1 ? key2 : key1;
+    key_t_int min = key1 <= key2 ? key1 : key2;
+    key_t_int max = min == key1 ? key2 : key1;
 
 
     int count = 0;
@@ -204,10 +204,10 @@ int get_range_amount(struct bplus_tree *tree, key_t key1, key_t key2) {
     return count;
 }
 
-long *bplus_tree_get_range(struct bplus_tree *tree, key_t key1, key_t key2, int *amount) {
+long *bplus_tree_get_range(struct bplus_tree *tree, key_t_int key1, key_t_int key2, int *amount) {
     long start = -1;
-    key_t min = key1 <= key2 ? key1 : key2;
-    key_t max = min == key1 ? key2 : key1;
+    key_t_int min = key1 <= key2 ? key1 : key2;
+    key_t_int max = min == key1 ? key2 : key1;
     int count = 0;
 
     count = get_range_amount(tree, key1, key2);
@@ -250,9 +250,9 @@ long *bplus_tree_get_range(struct bplus_tree *tree, key_t key1, key_t key2, int 
     return results;
 }
 
-int get_greater_amount(struct bplus_tree *tree, key_t key) {
+int get_greater_amount(struct bplus_tree *tree, key_t_int key) {
     long start = -1;
-    key_t min = key;
+    key_t_int min = key;
     int count = 0;
 
     struct bplus_node *node = node_seek(tree, tree->root);
@@ -287,9 +287,9 @@ int get_greater_amount(struct bplus_tree *tree, key_t key) {
 }
 
 
-long *bplus_tree_get_more_than(struct bplus_tree *tree, key_t key, int *amount) {
+long *bplus_tree_get_more_than(struct bplus_tree *tree, key_t_int key, int *amount) {
     long start = -1;
-    key_t min = key;
+    key_t_int min = key;
     long *results = NULL;
     int count = 0;
     struct bplus_node *temp = NULL;
@@ -337,8 +337,8 @@ long *bplus_tree_get_more_than(struct bplus_tree *tree, key_t key, int *amount) 
     return results;
 }
 
-int get_less_amount(struct bplus_tree *tree, key_t key) {
-    key_t max = key;
+int get_less_amount(struct bplus_tree *tree, key_t_int key) {
+    key_t_int max = key;
     int count = 0;
 
     struct bplus_node *node = node_seek(tree, tree->root);
@@ -374,9 +374,9 @@ int get_less_amount(struct bplus_tree *tree, key_t key) {
     return count;
 }
 
-long *bplus_tree_less_than(struct bplus_tree *tree, key_t key, int *amount) {
+long *bplus_tree_less_than(struct bplus_tree *tree, key_t_int key, int *amount) {
     long start = -1;
-    key_t max = key;
+    key_t_int max = key;
     long *results = NULL;
     int count = 0;
 
@@ -447,8 +447,8 @@ struct bplus_tree *bplus_tree_load(char *tree_addr, char *tree_boot_addr, int bl
     }
 
     _block_size = block_size;
-    _max_order = (block_size - sizeof(node)) / (sizeof(key_t) + sizeof(off_t));
-    _max_entries = (block_size - sizeof(node)) / (sizeof(key_t) + sizeof(long));
+    _max_order = (block_size - sizeof(node)) / (sizeof(key_t_int) + sizeof(off_t));
+    _max_entries = (block_size - sizeof(node)) / (sizeof(key_t_int) + sizeof(long));
 
     /*文件容量太小*/
     if (_max_order <= 2) {
@@ -497,11 +497,11 @@ struct bplus_tree *bplus_tree_load(char *tree_addr, char *tree_boot_addr, int bl
         boot_file_off_t += ADDR_STR_WIDTH;
     }
     /*设置节点内关键字和数据最大个数,如果是256都是18*/
-    _max_order = (_block_size - sizeof(node)) / (sizeof(key_t) + sizeof(off_t));
-    _max_entries = (_block_size - sizeof(node)) / (sizeof(key_t) + sizeof(long));
+    _max_order = (_block_size - sizeof(node)) / (sizeof(key_t_int) + sizeof(off_t));
+    _max_entries = (_block_size - sizeof(node)) / (sizeof(key_t_int) + sizeof(long));
     // printf todo
-    printf("config node order:%d and leaf entries:%d and _block_size:%d ,sizeof key_t:%lu\n", _max_order, _max_entries,
-           _block_size, sizeof(key_t));
+    printf("config node order:%d and leaf entries:%d and _block_size:%d ,sizeof key_t_int:%lu\n", _max_order, _max_entries,
+           _block_size, sizeof(key_t_int));
 
     /*申请和初始化节点缓存*/
     tree->caches = malloc(_block_size * MIN_CACHE_NUM);

@@ -13,7 +13,7 @@ int test_get_key(void) {
     int len=0;
 
     get_key(tree_id, page_index, string,&len);
-    printf("%s len is %d\n", string, strlen(string));
+    printf("%s len is %lu\n", string, strlen(string));
     return 0;
 }
 
